@@ -172,6 +172,22 @@ export const SidebarDrawer: React.FC = () => {
               </div>
             </button>
 
+            {/* Immagine della Home */}
+            <button
+              type="button"
+              onClick={() => handleNavigate('organizer_image')}
+              className={`w-full text-left p-3.5 rounded-xl transition-all cursor-pointer ${
+                activeView === 'organizer_image'
+                  ? 'bg-stone-900 text-white shadow-sm'
+                  : 'text-stone-800 hover:bg-[#FFE68A]/25 hover:text-stone-950'
+              }`}
+            >
+              <div className="text-sm font-semibold">Immagine della Home</div>
+              <div className={`text-xs mt-0.5 ${activeView === 'organizer_image' ? 'text-stone-300' : 'text-stone-500'}`}>
+                Foto di copertina della lista
+              </div>
+            </button>
+
             {/* 2. Gestisci Pagamenti */}
             <button
               type="button"

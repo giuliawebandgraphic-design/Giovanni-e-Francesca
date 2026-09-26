@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { useRegistry } from '../context/RegistryContext';
 import { GiftItem, GiftCategory } from '../types';
 import { ContributeModal } from './ContributeModal';
-import { Heart, Search, Check, Sparkles, MapPin, Calendar, ShieldCheck, ArrowRight, Gift } from 'lucide-react';
+import { Heart, Search, Check, Sparkles, MapPin, Calendar, ShieldCheck, ArrowRight, Gift, Camera } from 'lucide-react';
 
 export const GuestRegistryView: React.FC = () => {
-  const { gifts, settings, totalRaised, totalTarget } = useRegistry();
+  const { gifts, settings, totalRaised, totalTarget, setActiveView } = useRegistry();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeGiftForContribute, setActiveGiftForContribute] = useState<GiftItem | null>(null);
@@ -97,13 +97,23 @@ export const GuestRegistryView: React.FC = () => {
 
             {/* Right: Curated Hero Photography */}
             <div className="lg:col-span-5 relative">
-              <div className="aspect-4/3 rounded-2xl overflow-hidden shadow-lg border border-stone-200 bg-stone-100">
+              <div className="aspect-4/3 rounded-2xl overflow-hidden shadow-lg border border-stone-200 bg-stone-100 relative group">
                 <img
                   src={settings.heroImage}
                   alt={settings.coupleNames}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102"
                   referrerPolicy="no-referrer"
                 />
+                {/* Quick change button overlay */}
+                <button
+                  type="button"
+                  onClick={() => setActiveView('organizer_image')}
+                  className="absolute top-3 right-3 px-3 py-1.5 bg-stone-900/80 hover:bg-stone-900 text-white rounded-xl text-xs font-semibold backdrop-blur-xs flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
+                  title="Modifica l'immagine di copertina della home"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>Modifica Foto</span>
+                </button>
               </div>
               <div className="absolute -bottom-3 -right-3 bg-white px-4 py-2 rounded-xl shadow-md border border-stone-200 text-xs text-stone-700">
                 <span className="font-semibold text-stone-900">Quote libere</span> per ogni invitato
@@ -150,7 +160,35 @@ export const GuestRegistryView: React.FC = () => {
 
       {/* 3. Gifts Grid */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        {filteredGifts.length === 0 ? (
+        {gifts.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-2xl border border-stone-200 p-8 max-w-xl mx-auto shadow-xs">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-[#BCBF97]/25 text-[#636842] flex items-center justify-center mb-4">
+              <Gift className="w-7 h-7" />
+            </div>
+            <h3 className="text-lg font-bold text-stone-900 mb-1">
+              La lista regali è pronta!
+            </h3>
+            <p className="text-xs text-stone-600 mb-6 max-w-md mx-auto leading-relaxed">
+              Non hai ancora inserito nessun regalo. Aggiungi i primi desideri o le quote per il viaggio di nozze con quota libera PayPal o bonifico.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setActiveView('organizer_gifts')}
+                className="w-full sm:w-auto px-5 py-2.5 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+              >
+                + Aggiungi Primo Desiderio
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveView('organizer_image')}
+                className="w-full sm:w-auto px-4 py-2.5 bg-[#FFE68A]/30 hover:bg-[#FFE68A]/50 text-stone-900 border border-amber-300 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+              >
+                Personalizza Foto Copertina
+              </button>
+            </div>
+          </div>
+        ) : filteredGifts.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-2xl border border-stone-200">
             <Gift className="w-10 h-10 text-stone-300 mx-auto mb-3" />
             <p className="text-stone-600 text-sm font-medium">Nessun regalo trovato per questo filtro.</p>

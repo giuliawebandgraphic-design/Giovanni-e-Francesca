@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { GiftItem, Guest, Donation, RegistrySettings, PaymentMethod, DonationStatus } from '../types';
-import { INITIAL_GIFTS, INITIAL_GUESTS, INITIAL_DONATIONS, INITIAL_SETTINGS } from '../data/initialData';
+import { INITIAL_GIFTS, INITIAL_GUESTS, INITIAL_DONATIONS, INITIAL_SETTINGS, DEMO_PRESET_GIFTS } from '../data/initialData';
 
 export type AppView = 
   | 'guest_registry' 
@@ -10,7 +10,8 @@ export type AppView =
   | 'organizer_paypal'
   | 'organizer_thanks'
   | 'organizer_stats'
-  | 'organizer_embed';
+  | 'organizer_embed'
+  | 'organizer_image';
 
 interface RegistryContextType {
   gifts: GiftItem[];
@@ -51,6 +52,8 @@ interface RegistryContextType {
   sendThankYou: (guestId: string, donationId?: string, customNote?: string) => void;
   updateSettings: (updates: Partial<RegistrySettings>) => void;
   resetToDefaults: () => void;
+  clearAllData: () => void;
+  loadDemoGifts: () => void;
 
   // Computed & Helpers
   totalTarget: number;
@@ -63,10 +66,10 @@ interface RegistryContextType {
 const RegistryContext = createContext<RegistryContextType | undefined>(undefined);
 
 const STORAGE_KEYS = {
-  GIFTS: 'given2_gifts_v2',
-  GUESTS: 'given2_guests_v2',
-  DONATIONS: 'given2_donations_v2',
-  SETTINGS: 'given2_settings_v2',
+  GIFTS: 'given2_gifts_clean_v1',
+  GUESTS: 'given2_guests_clean_v1',
+  DONATIONS: 'given2_donations_clean_v1',
+  SETTINGS: 'given2_settings_clean_v1',
 };
 
 const AVATAR_COLORS = [
@@ -321,6 +324,19 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setSettings(INITIAL_SETTINGS);
   };
 
+  const clearAllData = () => {
+    setGifts([]);
+    setGuests([]);
+    setDonations([]);
+    localStorage.removeItem(STORAGE_KEYS.GIFTS);
+    localStorage.removeItem(STORAGE_KEYS.GUESTS);
+    localStorage.removeItem(STORAGE_KEYS.DONATIONS);
+  };
+
+  const loadDemoGifts = () => {
+    setGifts(DEMO_PRESET_GIFTS);
+  };
+
   // Direct PayPal link generator
   const getPayPalLink = (amount: number, referenceCode: string, note?: string) => {
     const cleanHandle = settings.paypalMeUsername.replace(/^@/, '').trim();
@@ -372,6 +388,8 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         sendThankYou,
         updateSettings,
         resetToDefaults,
+        clearAllData,
+        loadDemoGifts,
         totalTarget,
         totalRaised,
         paypalTotal,

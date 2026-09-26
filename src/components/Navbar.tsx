@@ -16,6 +16,7 @@ export const Navbar: React.FC = () => {
     organizer_stats: 'Statistiche',
     organizer_guests: 'Rubrica Invitati',
     organizer_embed: 'Codice per il Sito',
+    organizer_image: 'Immagine della Home',
   };
 
   const currentViewTitle = viewTitles[activeView] || 'Lista Nozze';

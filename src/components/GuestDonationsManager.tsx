@@ -271,7 +271,18 @@ export const GuestDonationsManager: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
-              {filteredGuests.length === 0 ? (
+              {guests.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center">
+                    <div className="max-w-sm mx-auto space-y-2">
+                      <p className="text-sm font-semibold text-stone-900">Rubrica invitati pulita e pronta</p>
+                      <p className="text-xs text-stone-500 leading-relaxed">
+                        Gli invitati verranno aggiunti automaticamente quando verseranno una quota regalo su PayPal o bonifico, oppure puoi registrarli manualmente cliccando su "+ Aggiungi Invitato".
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredGuests.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-stone-500">
                     Nessun invitato corrispondente ai criteri selezionati.

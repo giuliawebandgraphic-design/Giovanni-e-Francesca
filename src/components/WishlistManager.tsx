@@ -82,8 +82,33 @@ export const WishlistManager: React.FC = () => {
       </div>
 
       {/* Gifts Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredGifts.map((gift) => {
+      {gifts.length === 0 ? (
+        <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-stone-300 p-8 space-y-4 max-w-lg mx-auto shadow-2xs">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-[#BCBF97]/20 text-[#636842] flex items-center justify-center">
+            <Gift className="w-7 h-7" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-stone-900">La lista dei desideri è pulita e pronta</h3>
+            <p className="text-xs text-stone-500 max-w-md mx-auto leading-relaxed">
+              Non hai ancora inserito nessun regalo. Inizia ad aggiungere i singoli doni, le tappe del viaggio di nozze o quote libere per i vostri invitati.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleOpenNew}
+            className="inline-flex items-center gap-2 py-2.5 px-5 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Aggiungi il Primo Regalo</span>
+          </button>
+        </div>
+      ) : filteredGifts.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-2xl border border-stone-200">
+          <p className="text-stone-500 text-xs">Nessun regalo in questa categoria.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredGifts.map((gift) => {
           const isCompleted = gift.status === 'completed';
           const percent = gift.isInfiniteQuota
             ? 100
@@ -208,6 +233,7 @@ export const WishlistManager: React.FC = () => {
           );
         })}
       </div>
+      )}
 
       {modalOpen && (
         <AddEditGiftModal

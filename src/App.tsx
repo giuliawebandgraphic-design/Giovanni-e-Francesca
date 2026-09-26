@@ -15,6 +15,7 @@ import { PayPalPayoutSettings } from './components/PayPalPayoutSettings';
 import { ThanksManager } from './components/ThanksManager';
 import { StatisticsPage } from './components/StatisticsPage';
 import { EmbedCodePage } from './components/EmbedCodePage';
+import { HomeImageManager } from './components/HomeImageManager';
 import { Heart, ShieldCheck, Code2 } from 'lucide-react';
 
 const MainContent: React.FC = () => {
@@ -36,6 +37,7 @@ const MainContent: React.FC = () => {
         {activeView === 'organizer_thanks' && <ThanksManager />}
         {activeView === 'organizer_stats' && <StatisticsPage />}
         {activeView === 'organizer_embed' && <EmbedCodePage />}
+        {activeView === 'organizer_image' && <HomeImageManager />}
       </main>
 
       {/* Quiet Footer */}
