@@ -1,0 +1,7 @@
+{
+  "name": "Given2 Wishlist & Gift Registry",
+  "description": "Lista nozze di Giovanni e Francesca - 19 Luglio 2026. Wishlist con quote libere, versamento diretto su PayPal e gestione donazioni dai profili degli invitati.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
