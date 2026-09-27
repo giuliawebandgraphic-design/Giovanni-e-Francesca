@@ -143,22 +143,108 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
-  // Sync to local storage
+  // Sync to local storage and broadcast to all open iframes / tabs
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.GIFTS, JSON.stringify(gifts));
+    try {
+      localStorage.setItem(STORAGE_KEYS.GIFTS, JSON.stringify(gifts));
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        const channel = new BroadcastChannel('given2_live_sync');
+        channel.postMessage({ type: 'GIFTS_UPDATED', payload: gifts });
+        channel.close();
+      }
+    } catch {
+      // ignore
+    }
   }, [gifts]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.GUESTS, JSON.stringify(guests));
+    try {
+      localStorage.setItem(STORAGE_KEYS.GUESTS, JSON.stringify(guests));
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        const channel = new BroadcastChannel('given2_live_sync');
+        channel.postMessage({ type: 'GUESTS_UPDATED', payload: guests });
+        channel.close();
+      }
+    } catch {
+      // ignore
+    }
   }, [guests]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.DONATIONS, JSON.stringify(donations));
+    try {
+      localStorage.setItem(STORAGE_KEYS.DONATIONS, JSON.stringify(donations));
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        const channel = new BroadcastChannel('given2_live_sync');
+        channel.postMessage({ type: 'DONATIONS_UPDATED', payload: donations });
+        channel.close();
+      }
+    } catch {
+      // ignore
+    }
   }, [donations]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+    try {
+      localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        const channel = new BroadcastChannel('given2_live_sync');
+        channel.postMessage({ type: 'SETTINGS_UPDATED', payload: settings });
+        channel.close();
+      }
+    } catch {
+      // ignore
+    }
   }, [settings]);
+
+  // Real-time synchronization listener for iframes and multiple tabs
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // 1. BroadcastChannel listener (instant across tabs and iframes on same origin)
+    let channel: BroadcastChannel | null = null;
+    if ('BroadcastChannel' in window) {
+      channel = new BroadcastChannel('given2_live_sync');
+      channel.onmessage = (event) => {
+        if (!event.data || !event.data.type) return;
+        if (event.data.type === 'GIFTS_UPDATED' && event.data.payload) {
+          setGifts(event.data.payload);
+        } else if (event.data.type === 'GUESTS_UPDATED' && event.data.payload) {
+          setGuests(event.data.payload);
+        } else if (event.data.type === 'DONATIONS_UPDATED' && event.data.payload) {
+          setDonations(event.data.payload);
+        } else if (event.data.type === 'SETTINGS_UPDATED' && event.data.payload) {
+          setSettings(event.data.payload);
+        }
+      };
+    }
+
+    // 2. Storage event listener (standard browser cross-window storage event)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (!e.newValue) return;
+      try {
+        if (e.key === STORAGE_KEYS.GIFTS) {
+          setGifts(JSON.parse(e.newValue));
+        } else if (e.key === STORAGE_KEYS.GUESTS) {
+          setGuests(JSON.parse(e.newValue));
+        } else if (e.key === STORAGE_KEYS.DONATIONS) {
+          setDonations(JSON.parse(e.newValue));
+        } else if (e.key === STORAGE_KEYS.SETTINGS) {
+          setSettings(JSON.parse(e.newValue));
+        }
+      } catch {
+        // ignore parse error
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      if (channel) {
+        channel.close();
+      }
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   useEffect(() => {
     try {

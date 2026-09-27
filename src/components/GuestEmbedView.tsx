@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRegistry } from '../context/RegistryContext';
 import { GiftItem } from '../types';
 import { ContributeModal } from './ContributeModal';
@@ -13,6 +13,37 @@ export const GuestEmbedView: React.FC<GuestEmbedViewProps> = ({ showHeroPhoto = 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeGiftForContribute, setActiveGiftForContribute] = useState<GiftItem | null>(null);
+
+  // Post dynamic height to parent container (so external website iframe auto-resizes seamlessly without scrollbars)
+  useEffect(() => {
+    const notifyHeight = () => {
+      if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
+        const height = Math.max(
+          document.body.scrollHeight,
+          document.documentElement.scrollHeight,
+          document.body.offsetHeight,
+          document.documentElement.offsetHeight
+        );
+        window.parent.postMessage({ type: 'GIVEN2_RESIZE_IFRAME', height }, '*');
+      }
+    };
+
+    notifyHeight();
+    const timer = setTimeout(notifyHeight, 350);
+
+    let observer: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(() => notifyHeight());
+      observer.observe(document.body);
+    }
+
+    window.addEventListener('resize', notifyHeight);
+    return () => {
+      clearTimeout(timer);
+      if (observer) observer.disconnect();
+      window.removeEventListener('resize', notifyHeight);
+    };
+  }, [gifts, selectedCategory, searchQuery]);
 
   const categories = [
     { key: 'all', label: 'Tutti i Desideri' },

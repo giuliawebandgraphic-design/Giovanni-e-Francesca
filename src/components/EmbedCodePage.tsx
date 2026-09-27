@@ -94,20 +94,32 @@ export const EmbedCodePage: React.FC = () => {
     setTimeout(() => setCopiedHeaders(false), 2200);
   };
 
-  // Construct iframe embed code
-  const iframeCode = `<!-- Inizio Widget Lista Nozze Giovanni & Francesca -->
-<div style="width: 100%; max-width: 1200px; margin: 0 auto; overflow: hidden; border-radius: 16px; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);">
+  // Construct iframe embed code with dynamic auto-height and real-time responsiveness
+  const iframeCode = `<!-- Inizio Widget Lista Nozze ${settings.coupleNames} -->
+<div id="lista-nozze-wrapper" style="width: 100%; max-width: 1200px; margin: 0 auto; overflow: hidden; border-radius: 16px; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06); background: transparent;">
   <iframe
-    src="${baseUrl}/?embed=true&theme=${accentColor}&cover=${showCoverInEmbed}"
+    id="lista-nozze-iframe"
+    src="${baseUrl}/?embed=true"
     width="100%"
     height="${iframeHeight}px"
-    style="border: 0; width: 100%; min-height: ${iframeHeight}px; display: block;"
+    style="border: 0; width: 100%; min-height: 450px; display: block; transition: height 0.25s ease;"
     title="Lista Nozze ${settings.coupleNames}"
     loading="lazy"
     allow="payment"
   ></iframe>
 </div>
-<!-- Fine Widget Lista Nozze Giovanni & Francesca -->`;
+<script>
+  // Aggiornamento e ridimensionamento automatico dell'altezza dell'iframe
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'GIVEN2_RESIZE_IFRAME') {
+      var iframe = document.getElementById('lista-nozze-iframe');
+      if (iframe && event.data.height > 200) {
+        iframe.style.height = event.data.height + 'px';
+      }
+    }
+  });
+</script>
+<!-- Fine Widget Lista Nozze ${settings.coupleNames} -->`;
 
   // Construct styled button code
   const buttonHex = accentColor === 'sage' ? '#BCBF97' : accentColor === 'gold' ? '#FFE68A' : '#A6C1D8';

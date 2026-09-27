@@ -330,63 +330,115 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
                 />
               </div>
 
-              {/* Categoria e Obiettivo in 2 Colonne */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div>
-                  <label className="block text-xs font-bold text-stone-900 mb-1">
-                    Categoria
-                  </label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value as GiftCategory)}
-                    className="w-full px-3 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-stone-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#BCBF97] focus:bg-white font-medium cursor-pointer"
-                  >
-                    <option value="honeymoon">Luna di Miele</option>
-                    <option value="home">Casa & Arredo</option>
-                    <option value="experience">Esperienze</option>
-                    <option value="tech">Tecnologia & Hobby</option>
-                    <option value="custom">Fondo Libero</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-stone-900 mb-1">
-                    Obiettivo Totale ({settings.currency})
-                  </label>
-                  <input
-                    type="number"
-                    min="10"
-                    step="10"
-                    disabled={isInfiniteQuota}
-                    placeholder="500"
-                    value={isInfiniteQuota ? '' : targetAmount}
-                    onChange={(e) => setTargetAmount(e.target.value)}
-                    className={`w-full px-3.5 py-2.5 border rounded-xl text-stone-900 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#BCBF97] ${
-                      isInfiniteQuota
-                        ? 'bg-stone-100 border-stone-200 text-stone-400 cursor-not-allowed'
-                        : 'bg-stone-50 border-stone-300 focus:bg-white'
-                    }`}
-                  />
-                </div>
+              {/* Categoria */}
+              <div>
+                <label className="block text-xs font-bold text-stone-900 mb-1">
+                  Categoria del Regalo
+                </label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value as GiftCategory)}
+                  className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-stone-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#BCBF97] focus:bg-white font-medium cursor-pointer"
+                >
+                  <option value="honeymoon">Luna di Miele</option>
+                  <option value="home">Casa & Arredo</option>
+                  <option value="experience">Esperienze</option>
+                  <option value="tech">Tecnologia & Hobby</option>
+                  <option value="custom">Fondo Libero</option>
+                </select>
               </div>
 
-              {/* Quota libera checkbox */}
-              <label className="flex items-start gap-2.5 p-3 rounded-xl border border-stone-200 bg-stone-50/80 hover:bg-stone-100/80 cursor-pointer transition-colors">
-                <input
-                  type="checkbox"
-                  checked={isInfiniteQuota}
-                  onChange={(e) => setIsInfiniteQuota(e.target.checked)}
-                  className="rounded text-[#636842] focus:ring-[#BCBF97] mt-0.5 cursor-pointer"
-                />
-                <div className="text-xs">
-                  <span className="font-bold text-stone-900 block">
-                    Fondo a quota libera senza tetto massimo
-                  </span>
-                  <span className="text-[11px] text-stone-500 block">
-                    Gli invitati potranno inserire liberamente qualsiasi cifra (ideale per salvadanai nozze o quote aperte del viaggio).
+              {/* Obiettivo del Desiderio: Scelta tra Traguardo Fisso o Quota Libera */}
+              <div className="p-4 bg-stone-50/80 rounded-2xl border border-stone-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-stone-900">
+                    Tipo di Quota & Obiettivo
+                  </label>
+                  <span className="text-[11px] text-stone-500 font-medium">
+                    {isInfiniteQuota ? 'Senza importo massimo' : `Traguardo: ${settings.currency}${parseFloat(targetAmount) || 0}`}
                   </span>
                 </div>
-              </label>
+
+                {/* Scelta Modalità: Quota Fissa vs Quota Libera */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsInfiniteQuota(false);
+                      if (!targetAmount || targetAmount === '0') setTargetAmount('500');
+                    }}
+                    className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
+                      !isInfiniteQuota
+                        ? 'bg-[#636842] text-white border-[#636842] shadow-xs'
+                        : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-100'
+                    }`}
+                  >
+                    <span>Traguardo con Obiettivo</span>
+                    <span className={`text-[10px] ${!isInfiniteQuota ? 'text-stone-200' : 'text-stone-400'}`}>
+                      Es. 500€, 1.000€ a quote
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsInfiniteQuota(true)}
+                    className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
+                      isInfiniteQuota
+                        ? 'bg-[#636842] text-white border-[#636842] shadow-xs'
+                        : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-100'
+                    }`}
+                  >
+                    <span>Salvadanaio Libero</span>
+                    <span className={`text-[10px] ${isInfiniteQuota ? 'text-stone-200' : 'text-stone-400'}`}>
+                      Senza tetto massimo
+                    </span>
+                  </button>
+                </div>
+
+                {/* Campo Obiettivo + Tagli Rapidi se non è quota libera */}
+                {!isInfiniteQuota ? (
+                  <div className="space-y-2 pt-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-stone-500">{settings.currency}</span>
+                      <input
+                        type="number"
+                        min="1"
+                        step="10"
+                        placeholder="Inserisci l'obiettivo (es. 800)"
+                        value={targetAmount}
+                        onChange={(e) => setTargetAmount(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-stone-900 text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#BCBF97]"
+                      />
+                    </div>
+
+                    {/* Tagli Predefiniti Rapidi */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[11px] text-stone-400 mr-1">Importi frequenti:</span>
+                      {[150, 300, 500, 1000, 1500, 2500].map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => {
+                            setIsInfiniteQuota(false);
+                            setTargetAmount(String(preset));
+                          }}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                            targetAmount === String(preset)
+                              ? 'bg-[#BCBF97] text-stone-900 font-bold'
+                              : 'bg-white border border-stone-200 text-stone-600 hover:bg-stone-100'
+                          }`}
+                        >
+                          {settings.currency}{preset.toLocaleString()}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-stone-600 bg-white p-2.5 rounded-xl border border-stone-200">
+                    Gli invitati potranno inserire liberamente qualsiasi cifra desiderano senza una percentuale di completamento.
+                  </p>
+                )}
+              </div>
 
               {/* Descrizione o storia */}
               <div>
