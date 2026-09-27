@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { GiftItem, Guest, Donation, RegistrySettings, PaymentMethod, DonationStatus } from '../types';
 import { INITIAL_GIFTS, INITIAL_GUESTS, INITIAL_DONATIONS, INITIAL_SETTINGS, DEMO_PRESET_GIFTS } from '../data/initialData';
+import { doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
+import { db, testConnection } from '../firebase/config';
 
 export type AppView = 
   | 'guest_registry' 
@@ -63,6 +65,7 @@ interface RegistryContextType {
   bankTotal: number;
   getPayPalLink: (amount: number, referenceCode: string, note?: string) => string;
   refreshRegistry: () => Promise<void>;
+  isFirestoreConnected: boolean;
 }
 
 const RegistryContext = createContext<RegistryContextType | undefined>(undefined);
@@ -142,11 +145,29 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [selectedGuestIdForDrawer, setSelectedGuestIdForDrawer] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+  const [isFirestoreConnected, setIsFirestoreConnected] = useState<boolean>(false);
 
   const isRemoteUpdatingRef = React.useRef<boolean>(false);
   const serverVersionRef = React.useRef<number>(1);
 
-  // Function to pull latest registry from server
+  // Helper to push state changes to Firebase Firestore Cloud
+  const pushSyncToFirestore = async (payload: {
+    gifts?: GiftItem[];
+    guests?: Guest[];
+    donations?: Donation[];
+    settings?: RegistrySettings;
+  }) => {
+    if (isRemoteUpdatingRef.current) return;
+    try {
+      const sanitized = JSON.parse(JSON.stringify(payload));
+      sanitized.lastUpdated = Date.now();
+      await setDoc(doc(db, 'registry', 'main'), sanitized, { merge: true });
+    } catch (err) {
+      console.warn('Firestore write warning:', err);
+    }
+  };
+
+  // Function to pull latest registry from server fallback
   const refreshRegistry = async () => {
     try {
       const res = await fetch('/api/registry');
@@ -204,16 +225,95 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  // 1. Initial server fetch on mount
+  // 1. Firebase Firestore Cloud Real-Time Listener (Instant multi-device sync anywhere)
+  useEffect(() => {
+    testConnection().then((connected) => {
+      setIsFirestoreConnected(connected);
+    });
+
+    const registryDoc = doc(db, 'registry', 'main');
+
+    const unsubscribe = onSnapshot(
+      registryDoc,
+      (snapshot) => {
+        setIsFirestoreConnected(true);
+        if (snapshot.exists()) {
+          const cloudData = snapshot.data();
+          if (cloudData) {
+            isRemoteUpdatingRef.current = true;
+            if (Array.isArray(cloudData.gifts)) {
+              setGifts(cloudData.gifts);
+              try {
+                localStorage.setItem(STORAGE_KEYS.GIFTS, JSON.stringify(cloudData.gifts));
+              } catch {}
+            }
+            if (Array.isArray(cloudData.guests)) {
+              setGuests(cloudData.guests);
+              try {
+                localStorage.setItem(STORAGE_KEYS.GUESTS, JSON.stringify(cloudData.guests));
+              } catch {}
+            }
+            if (Array.isArray(cloudData.donations)) {
+              setDonations(cloudData.donations);
+              try {
+                localStorage.setItem(STORAGE_KEYS.DONATIONS, JSON.stringify(cloudData.donations));
+              } catch {}
+            }
+            if (cloudData.settings && typeof cloudData.settings === 'object') {
+              setSettings(cloudData.settings);
+              try {
+                localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(cloudData.settings));
+              } catch {}
+            }
+
+            // Also keep local disk in sync as backup
+            pushSyncToServer({
+              gifts: cloudData.gifts,
+              guests: cloudData.guests,
+              donations: cloudData.donations,
+              settings: cloudData.settings,
+            });
+
+            setTimeout(() => {
+              isRemoteUpdatingRef.current = false;
+            }, 120);
+          }
+        } else {
+          // Document does not exist in Firestore yet: seed initial registry
+          const initialSeed = JSON.parse(
+            JSON.stringify({
+              gifts,
+              guests,
+              donations,
+              settings,
+              lastUpdated: Date.now(),
+            })
+          );
+          setDoc(registryDoc, initialSeed, { merge: true }).catch((err) => {
+            console.warn('Could not seed initial Firestore document:', err);
+          });
+        }
+      },
+      (err) => {
+        console.warn('Firestore subscription fallback:', err);
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  // 2. Initial server fetch on mount (fallback & fast boot)
   useEffect(() => {
     refreshRegistry();
   }, []);
 
-  // 2. Real-time background sync: SSE + fast polling (every 2.5s) + focus listener
+  // 3. Real-time background sync fallback: SSE + polling (every 3s) + focus listener
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // A. Server-Sent Events (SSE) for instant push
+    // A. Server-Sent Events (SSE)
     let eventSource: EventSource | null = null;
     try {
       eventSource = new EventSource('/api/registry/events');
@@ -229,14 +329,11 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           // ignore
         }
       };
-      eventSource.onerror = () => {
-        // SSE connection error fallback to polling
-      };
     } catch {
-      // EventSource not supported or blocked
+      // EventSource fallback
     }
 
-    // B. Fast Polling (checks lightweight version every 2.5s)
+    // B. Fast Polling (checks lightweight version every 3s)
     const pollInterval = setInterval(async () => {
       try {
         const res = await fetch('/api/registry/version');
@@ -248,7 +345,7 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       } catch {
         // ignore network error
       }
-    }, 2500);
+    }, 3000);
 
     // C. Refresh immediately when window/iframe gains focus or becomes visible
     const handleFocus = () => {
@@ -280,7 +377,7 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   }, []);
 
-  // Sync to local storage & push to server whenever state changes locally
+  // Sync to local storage, push to server & save to Firestore whenever state changes
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEYS.GIFTS, JSON.stringify(gifts));
@@ -289,11 +386,10 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         channel.postMessage({ type: 'GIFTS_UPDATED' });
         channel.close();
       }
-    } catch {
-      // ignore
-    }
+    } catch {}
     if (!isRemoteUpdatingRef.current) {
       pushSyncToServer({ gifts });
+      pushSyncToFirestore({ gifts });
     }
   }, [gifts]);
 
@@ -305,11 +401,10 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         channel.postMessage({ type: 'GUESTS_UPDATED' });
         channel.close();
       }
-    } catch {
-      // ignore
-    }
+    } catch {}
     if (!isRemoteUpdatingRef.current) {
       pushSyncToServer({ guests });
+      pushSyncToFirestore({ guests });
     }
   }, [guests]);
 
@@ -321,11 +416,10 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         channel.postMessage({ type: 'DONATIONS_UPDATED' });
         channel.close();
       }
-    } catch {
-      // ignore
-    }
+    } catch {}
     if (!isRemoteUpdatingRef.current) {
       pushSyncToServer({ donations });
+      pushSyncToFirestore({ donations });
     }
   }, [donations]);
 
@@ -337,11 +431,10 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         channel.postMessage({ type: 'SETTINGS_UPDATED' });
         channel.close();
       }
-    } catch {
-      // ignore
-    }
+    } catch {}
     if (!isRemoteUpdatingRef.current) {
       pushSyncToServer({ settings });
+      pushSyncToFirestore({ settings });
     }
   }, [settings]);
 
@@ -606,6 +699,7 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         bankTotal,
         getPayPalLink,
         refreshRegistry,
+        isFirestoreConnected,
       }}
     >
       {children}

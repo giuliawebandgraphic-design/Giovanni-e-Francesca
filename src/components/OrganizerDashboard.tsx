@@ -34,6 +34,7 @@ export const OrganizerDashboard: React.FC = () => {
     resetToDefaults,
     clearAllData,
     loadDemoGifts,
+    isFirestoreConnected,
   } = useRegistry();
 
   const percent = totalTarget > 0 ? Math.min(100, Math.round((totalRaised / totalTarget) * 100)) : 0;
@@ -46,11 +47,18 @@ export const OrganizerDashboard: React.FC = () => {
       <div className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-r from-[#FFE68A]/35 via-[#A6C1D8]/30 to-[#BCBF97]/35 border border-stone-200/80 shadow-2xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/90 text-stone-800 border border-stone-200/60 shadow-2xs mb-2">
-              <span className="w-2 h-2 rounded-full bg-[#FFE68A] ring-2 ring-stone-300"></span>
-              <span className="w-2 h-2 rounded-full bg-[#A6C1D8] ring-2 ring-stone-300 -ml-1"></span>
-              <span className="w-2 h-2 rounded-full bg-[#BCBF97] ring-2 ring-stone-300 -ml-1"></span>
-              <span>Dashboard Sposi · {settings.coupleNames}</span>
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/90 text-stone-800 border border-stone-200/60 shadow-2xs">
+                <span className="w-2 h-2 rounded-full bg-[#FFE68A] ring-2 ring-stone-300"></span>
+                <span className="w-2 h-2 rounded-full bg-[#A6C1D8] ring-2 ring-stone-300 -ml-1"></span>
+                <span className="w-2 h-2 rounded-full bg-[#BCBF97] ring-2 ring-stone-300 -ml-1"></span>
+                <span>Dashboard Sposi · {settings.coupleNames}</span>
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
+                <span className={`w-2 h-2 rounded-full bg-emerald-500 ${isFirestoreConnected ? 'animate-pulse' : ''}`}></span>
+                <span>Cloud Firestore Database: Connesso & Sincronizzato Ovunque</span>
+              </div>
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight">
               Pannello di Controllo Lista Nozze

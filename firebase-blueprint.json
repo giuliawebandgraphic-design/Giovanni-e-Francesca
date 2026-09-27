@@ -1,0 +1,107 @@
+{
+  "entities": {
+    "Gift": {
+      "title": "Gift",
+      "description": "A wedding registry gift item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "targetAmount": { "type": "number" },
+        "raisedAmount": { "type": "number" },
+        "suggestedQuotas": { "type": "array" },
+        "status": { "type": "string" },
+        "isPriority": { "type": "boolean" },
+        "isInfiniteQuota": { "type": "boolean" },
+        "contributionsCount": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "title", "category"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Registry general settings",
+      "type": "object",
+      "properties": {
+        "coupleNames": { "type": "string" },
+        "eventTitle": { "type": "string" },
+        "eventDate": { "type": "string" },
+        "eventLocation": { "type": "string" },
+        "welcomeMessage": { "type": "string" },
+        "currency": { "type": "string" },
+        "paypalEmail": { "type": "string" },
+        "paypalMeUsername": { "type": "string" },
+        "bankIban": { "type": "string" },
+        "bankAccountHolder": { "type": "string" },
+        "bankName": { "type": "string" },
+        "bankBic": { "type": "string" },
+        "heroImage": { "type": "string" }
+      }
+    },
+    "Guest": {
+      "title": "Guest",
+      "description": "A guest in the wedding list",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "fullName": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "group": { "type": "string" },
+        "rsvpStatus": { "type": "string" },
+        "plusOnes": { "type": "number" },
+        "notes": { "type": "string" },
+        "dietaryRequirements": { "type": "string" },
+        "tableAssignment": { "type": "string" },
+        "totalContributed": { "type": "number" },
+        "contributionsCount": { "type": "number" }
+      },
+      "required": ["id", "fullName", "email"]
+    },
+    "Donation": {
+      "title": "Donation",
+      "description": "A monetary contribution towards a gift",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "giftId": { "type": "string" },
+        "giftTitle": { "type": "string" },
+        "guestId": { "type": "string" },
+        "guestName": { "type": "string" },
+        "guestEmail": { "type": "string" },
+        "guestPhone": { "type": "string" },
+        "guestGroup": { "type": "string" },
+        "amount": { "type": "number" },
+        "currency": { "type": "string" },
+        "paymentMethod": { "type": "string" },
+        "status": { "type": "string" },
+        "message": { "type": "string" },
+        "referenceCode": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "giftId", "amount", "paymentMethod"]
+    }
+  },
+  "firestore": {
+    "/registry/main": {
+      "schema": "Settings",
+      "description": "Singleton document storing registry state, settings, gifts, guests, donations"
+    },
+    "/gifts/{giftId}": {
+      "schema": "Gift",
+      "description": "Wedding registry gifts items"
+    },
+    "/guests/{guestId}": {
+      "schema": "Guest",
+      "description": "Wedding guests"
+    },
+    "/donations/{donationId}": {
+      "schema": "Donation",
+      "description": "Donations / contributions"
+    }
+  }
+}
