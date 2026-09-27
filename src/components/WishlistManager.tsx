@@ -95,7 +95,7 @@ export const WishlistManager: React.FC = () => {
           </div>
           <button
             type="button"
-            onClick={handleOpenNew}
+            onClick={handleOpenAdd}
             className="inline-flex items-center gap-2 py-2.5 px-5 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
