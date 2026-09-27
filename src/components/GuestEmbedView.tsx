@@ -158,10 +158,8 @@ export const GuestEmbedView: React.FC = () => {
                     )}
 
                     {isCompleted && (
-                      <div className="absolute inset-0 bg-stone-900/60 backdrop-blur-2xs flex items-center justify-center p-4">
-                        <span className="px-4 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-xl shadow-lg uppercase tracking-wider">
-                          Traguardo Raggiunto
-                        </span>
+                      <div className="absolute top-3 right-3 px-2.5 py-1 bg-emerald-700/90 text-white text-[11px] font-bold rounded-full shadow-2xs backdrop-blur-xs flex items-center gap-1">
+                        <span>Obiettivo 100% ✓</span>
                       </div>
                     )}
                   </div>

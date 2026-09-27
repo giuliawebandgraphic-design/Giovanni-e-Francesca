@@ -34,7 +34,9 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
   const [category, setCategory] = useState<GiftCategory>(giftToEdit?.category || 'honeymoon');
   const [description, setDescription] = useState<string>(giftToEdit?.description || '');
   const [imageUrl, setImageUrl] = useState<string>(giftToEdit?.imageUrl || PRESET_IMAGES[0].url);
-  const [targetAmount, setTargetAmount] = useState<string>(giftToEdit?.targetAmount ? String(giftToEdit.targetAmount) : '500');
+  const [targetAmount, setTargetAmount] = useState<string>(
+    giftToEdit?.targetAmount ? String(giftToEdit.targetAmount) : ''
+  );
   const [isInfiniteQuota, setIsInfiniteQuota] = useState<boolean>(giftToEdit?.isInfiniteQuota || false);
   const [isPriority, setIsPriority] = useState<boolean>(giftToEdit?.isPriority || false);
   const [imageTab, setImageTab] = useState<'upload' | 'preset' | 'url'>('upload');
@@ -69,7 +71,8 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
     e.preventDefault();
     if (!title.trim()) return;
 
-    const numericTarget = isInfiniteQuota ? 0 : parseFloat(targetAmount) || 500;
+    // Nessun limite minimo né fallback a 500: se non è quota libera accetta qualsiasi numero positivo
+    const numericTarget = isInfiniteQuota ? 0 : Math.max(0, parseFloat(targetAmount) || 0);
 
     if (giftToEdit) {
       updateGift(giftToEdit.id, {
@@ -348,25 +351,22 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
                 </select>
               </div>
 
-              {/* Obiettivo del Desiderio: Scelta tra Traguardo Fisso o Quota Libera */}
+              {/* Obiettivo del Desiderio: Scelta tra Traguardo con Obiettivo o Salvadanaio Libero */}
               <div className="p-4 bg-stone-50/80 rounded-2xl border border-stone-200 space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-bold text-stone-900">
-                    Tipo di Quota & Obiettivo
+                    Traguardo / Obiettivo Economico
                   </label>
                   <span className="text-[11px] text-stone-500 font-medium">
-                    {isInfiniteQuota ? 'Senza importo massimo' : `Traguardo: ${settings.currency}${parseFloat(targetAmount) || 0}`}
+                    {isInfiniteQuota ? 'Senza importo prefissato' : targetAmount ? `Obiettivo: ${settings.currency}${parseFloat(targetAmount) || 0}` : 'Nessun limite'}
                   </span>
                 </div>
 
-                {/* Scelta Modalità: Quota Fissa vs Quota Libera */}
+                {/* Scelta Modalità: Traguardo con Obiettivo vs Salvadanaio Libero */}
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => {
-                      setIsInfiniteQuota(false);
-                      if (!targetAmount || targetAmount === '0') setTargetAmount('500');
-                    }}
+                    onClick={() => setIsInfiniteQuota(false)}
                     className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
                       !isInfiniteQuota
                         ? 'bg-[#636842] text-white border-[#636842] shadow-xs'
@@ -375,7 +375,7 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
                   >
                     <span>Traguardo con Obiettivo</span>
                     <span className={`text-[10px] ${!isInfiniteQuota ? 'text-stone-200' : 'text-stone-400'}`}>
-                      Es. 500€, 1.000€ a quote
+                      Qualsiasi cifra libera
                     </span>
                   </button>
 
@@ -388,33 +388,38 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
                         : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-100'
                     }`}
                   >
-                    <span>Salvadanaio Libero</span>
+                    <span>Salvadanaio Aperto</span>
                     <span className={`text-[10px] ${isInfiniteQuota ? 'text-stone-200' : 'text-stone-400'}`}>
-                      Senza tetto massimo
+                      Senza mostrare barra
                     </span>
                   </button>
                 </div>
 
-                {/* Campo Obiettivo + Tagli Rapidi se non è quota libera */}
+                {/* Campo Obiettivo senza limiti + Tagli Rapidi Opzionali */}
                 {!isInfiniteQuota ? (
-                  <div className="space-y-2 pt-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-stone-500">{settings.currency}</span>
-                      <input
-                        type="number"
-                        min="1"
-                        step="10"
-                        placeholder="Inserisci l'obiettivo (es. 800)"
-                        value={targetAmount}
-                        onChange={(e) => setTargetAmount(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-stone-900 text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#BCBF97]"
-                      />
+                  <div className="space-y-2.5 pt-1">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-stone-600 mb-1">
+                        Cifra Obiettivo ({settings.currency}) — Nessun limite minimo né massimo:
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <span className="text-base font-bold text-stone-500 pl-1">{settings.currency}</span>
+                        <input
+                          type="number"
+                          step="any"
+                          min="0"
+                          placeholder="Digita qualsiasi importo (es. 50, 450, 1200, 15000...)"
+                          value={targetAmount}
+                          onChange={(e) => setTargetAmount(e.target.value)}
+                          className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-stone-900 text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#BCBF97]"
+                        />
+                      </div>
                     </div>
 
-                    {/* Tagli Predefiniti Rapidi */}
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[11px] text-stone-400 mr-1">Importi frequenti:</span>
-                      {[150, 300, 500, 1000, 1500, 2500].map((preset) => (
+                    {/* Tagli Suggeriti Opzionali (cliccabili rapidamente) */}
+                    <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                      <span className="text-[10px] text-stone-400 mr-0.5">Esempi rapidi:</span>
+                      {[50, 150, 300, 500, 1000, 2000, 5000].map((preset) => (
                         <button
                           key={preset}
                           type="button"
@@ -422,9 +427,9 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
                             setIsInfiniteQuota(false);
                             setTargetAmount(String(preset));
                           }}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                          className={`px-2 py-0.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
                             targetAmount === String(preset)
-                              ? 'bg-[#BCBF97] text-stone-900 font-bold'
+                              ? 'bg-[#BCBF97] text-stone-900 font-bold shadow-2xs'
                               : 'bg-white border border-stone-200 text-stone-600 hover:bg-stone-100'
                           }`}
                         >
@@ -432,6 +437,10 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
                         </button>
                       ))}
                     </div>
+
+                    <p className="text-[11px] text-stone-500 leading-tight">
+                      ✓ Gli invitati possono versare qualsiasi quota liberamente, e continuare a donare anche al superamento dell'obiettivo.
+                    </p>
                   </div>
                 ) : (
                   <p className="text-[11px] text-stone-600 bg-white p-2.5 rounded-xl border border-stone-200">
