@@ -161,7 +161,7 @@ export const DirectRecordDonationModal: React.FC<DirectRecordDonationModalProps>
             </button>
             <button
               type="submit"
-              className="py-2.5 px-5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer"
+              className="py-2.5 px-5 bg-[#636842] hover:bg-[#525636] text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer"
             >
               Registra Donazione
             </button>

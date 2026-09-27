@@ -47,7 +47,7 @@ export const WishlistManager: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={handleOpenAdd}
-            className="flex items-center gap-2 py-2 px-4 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer"
+            className="flex items-center gap-2 py-2 px-4 bg-[#636842] hover:bg-[#525636] text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Nuovo Regalo</span>
@@ -62,9 +62,9 @@ export const WishlistManager: React.FC = () => {
             key={catKey}
             type="button"
             onClick={() => setSelectedCategory(catKey)}
-            className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer capitalize ${
+            className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-colors cursor-pointer capitalize ${
               selectedCategory === catKey
-                ? 'bg-stone-900 text-white'
+                ? 'bg-[#636842] text-white shadow-xs'
                 : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
             }`}
           >
@@ -96,7 +96,7 @@ export const WishlistManager: React.FC = () => {
           <button
             type="button"
             onClick={handleOpenAdd}
-            className="inline-flex items-center gap-2 py-2.5 px-5 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 py-2.5 px-5 bg-[#636842] hover:bg-[#525636] text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Aggiungi il Primo Regalo</span>

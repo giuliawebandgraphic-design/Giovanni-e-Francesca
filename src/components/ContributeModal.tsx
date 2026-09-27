@@ -267,7 +267,7 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
                 <button
                   type="submit"
                   disabled={activeAmount <= 0}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-stone-900 hover:bg-stone-800 disabled:opacity-50 text-white font-semibold rounded-xl transition-all shadow-md cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-[#636842] hover:bg-[#525636] disabled:opacity-50 text-white font-semibold rounded-xl transition-all shadow-md cursor-pointer"
                 >
                   <span>Continua con la quota di {settings.currency}{activeAmount}</span>
                   <ArrowRight className="w-4 h-4" />
@@ -438,7 +438,7 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
                   type="button"
                   onClick={handleCompleteContribution}
                   disabled={isSubmitting}
-                  className="flex-1 py-3 px-4 bg-stone-900 hover:bg-stone-800 text-white font-semibold text-sm rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
+                  className="flex-1 py-3 px-4 bg-[#636842] hover:bg-[#525636] text-white font-semibold text-sm rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
                     <span>Registrazione in corso...</span>
@@ -490,7 +490,7 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="py-2.5 px-6 bg-stone-900 hover:bg-stone-800 text-white font-medium text-xs rounded-xl transition-colors cursor-pointer"
+                  className="py-2.5 px-6 bg-[#636842] hover:bg-[#525636] text-white font-medium text-xs rounded-xl transition-colors cursor-pointer"
                 >
                   Torna alla Lista Regali
                 </button>

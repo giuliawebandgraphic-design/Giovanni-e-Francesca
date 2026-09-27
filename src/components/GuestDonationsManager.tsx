@@ -139,7 +139,7 @@ export const GuestDonationsManager: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsAddGuestModalOpen(true)}
-            className="flex items-center gap-2 py-2 px-4 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer"
+            className="flex items-center gap-2 py-2 px-4 bg-[#636842] hover:bg-[#525636] text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Nuovo Invitato</span>
@@ -199,9 +199,9 @@ export const GuestDonationsManager: React.FC = () => {
           <button
             type="button"
             onClick={() => setDonationFilter('all')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-colors cursor-pointer ${
               donationFilter === 'all'
-                ? 'bg-stone-900 text-white'
+                ? 'bg-[#636842] text-white shadow-xs'
                 : 'bg-stone-100 text-stone-600 hover:text-stone-900'
             }`}
           >
@@ -210,9 +210,9 @@ export const GuestDonationsManager: React.FC = () => {
           <button
             type="button"
             onClick={() => setDonationFilter('has_donated')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-colors cursor-pointer ${
               donationFilter === 'has_donated'
-                ? 'bg-stone-900 text-white'
+                ? 'bg-[#636842] text-white shadow-xs'
                 : 'bg-stone-100 text-stone-600 hover:text-stone-900'
             }`}
           >
@@ -221,9 +221,9 @@ export const GuestDonationsManager: React.FC = () => {
           <button
             type="button"
             onClick={() => setDonationFilter('needs_thanks')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-colors cursor-pointer ${
               donationFilter === 'needs_thanks'
-                ? 'bg-stone-900 text-white'
+                ? 'bg-[#636842] text-white shadow-xs'
                 : 'bg-stone-100 text-stone-600 hover:text-stone-900'
             }`}
           >
@@ -232,9 +232,9 @@ export const GuestDonationsManager: React.FC = () => {
           <button
             type="button"
             onClick={() => setDonationFilter('no_donation')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-colors cursor-pointer ${
               donationFilter === 'no_donation'
-                ? 'bg-stone-900 text-white'
+                ? 'bg-[#636842] text-white shadow-xs'
                 : 'bg-stone-100 text-stone-600 hover:text-stone-900'
             }`}
           >
@@ -825,7 +825,7 @@ export const GuestDonationsManager: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="py-2.5 px-5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer"
+                  className="py-2.5 px-5 bg-[#636842] hover:bg-[#525636] text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer"
                 >
                   Salva Invitato
                 </button>

@@ -4,6 +4,7 @@ import { INITIAL_GIFTS, INITIAL_GUESTS, INITIAL_DONATIONS, INITIAL_SETTINGS, DEM
 
 export type AppView = 
   | 'guest_registry' 
+  | 'embed_view'
   | 'organizer_dashboard' 
   | 'organizer_gifts' 
   | 'organizer_guests' 
@@ -120,7 +121,23 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   });
 
-  const [activeView, setActiveView] = useState<AppView>('guest_registry');
+  const [activeView, setActiveView] = useState<AppView>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('embed') === 'true' || params.get('mode') === 'embed') {
+          return 'embed_view';
+        }
+        const savedView = sessionStorage.getItem('given2_active_view');
+        if (savedView) {
+          return savedView as AppView;
+        }
+      } catch {
+        // fallback
+      }
+    }
+    return 'organizer_dashboard';
+  });
   const [selectedGuestIdForDrawer, setSelectedGuestIdForDrawer] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
 
@@ -142,6 +159,14 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
   }, [settings]);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('given2_active_view', activeView);
+    } catch {
+      // ignore
+    }
+  }, [activeView]);
 
   // Recalculate gifts raised amounts dynamically when donations change
   useEffect(() => {

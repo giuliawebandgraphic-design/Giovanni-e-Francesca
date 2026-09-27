@@ -110,23 +110,52 @@ export const SidebarDrawer: React.FC = () => {
 
         {/* Navigation Items (NO ICONS NEXT TO MENU ITEMS) */}
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
-          {/* Section: Vista Pubblica */}
+          {/* Section: Vista Pubblica & Embed */}
           <div className="space-y-1">
-            <span className="text-[10px] uppercase tracking-wider text-stone-400 font-bold px-3 block mb-1">
-              Vista Pubblica
+            <span className="text-[10px] uppercase tracking-wider text-[#636842] font-bold px-3 block mb-1">
+              Viste per gli Invitati
             </span>
             <button
               type="button"
               onClick={() => handleNavigate('guest_registry')}
               className={`w-full text-left p-3.5 rounded-xl transition-all cursor-pointer ${
                 activeView === 'guest_registry'
-                  ? 'bg-stone-900 text-white shadow-sm'
+                  ? 'bg-[#636842] text-white shadow-sm'
                   : 'text-stone-800 hover:bg-stone-100 hover:text-stone-950'
               }`}
             >
-              <div className="text-sm font-semibold">Lista Regali (Invitati)</div>
-              <div className={`text-xs mt-0.5 ${activeView === 'guest_registry' ? 'text-stone-300' : 'text-stone-500'}`}>
-                Come appare ai tuoi ospiti
+              <div className="text-sm font-semibold">Lista Regali Completa</div>
+              <div className={`text-xs mt-0.5 ${activeView === 'guest_registry' ? 'text-stone-200' : 'text-stone-500'}`}>
+                Con navigazione e cambio vista
+              </div>
+            </button>
+
+            {/* Vista Dedicata Solo Iframe */}
+            <button
+              type="button"
+              onClick={() => handleNavigate('embed_view')}
+              className={`w-full text-left p-3.5 rounded-xl transition-all cursor-pointer border ${
+                activeView === 'embed_view'
+                  ? 'bg-[#636842] text-white border-[#636842] shadow-sm'
+                  : 'bg-[#BCBF97]/15 hover:bg-[#BCBF97]/30 text-stone-900 border-[#BCBF97]/40'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-bold text-stone-900">
+                  {activeView === 'embed_view' ? (
+                    <span className="text-white">Pagina Solo Lista (Per Iframe)</span>
+                  ) : (
+                    <span>Pagina Solo Lista (Per Iframe)</span>
+                  )}
+                </div>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  activeView === 'embed_view' ? 'bg-white/20 text-white' : 'bg-[#636842] text-white'
+                }`}>
+                  Senza Menù
+                </span>
+              </div>
+              <div className={`text-xs mt-0.5 ${activeView === 'embed_view' ? 'text-stone-200' : 'text-stone-600'}`}>
+                Solo messaggio degli sposi e lista desideri
               </div>
             </button>
           </div>
@@ -146,12 +175,12 @@ export const SidebarDrawer: React.FC = () => {
               onClick={() => handleNavigate('organizer_dashboard')}
               className={`w-full text-left p-3.5 rounded-xl transition-all cursor-pointer ${
                 activeView === 'organizer_dashboard'
-                  ? 'bg-stone-900 text-white shadow-sm'
+                  ? 'bg-[#636842] text-white shadow-sm'
                   : 'text-stone-800 hover:bg-stone-100 hover:text-stone-950'
               }`}
             >
               <div className="text-sm font-semibold">Panoramica Dashboard</div>
-              <div className={`text-xs mt-0.5 ${activeView === 'organizer_dashboard' ? 'text-stone-300' : 'text-stone-500'}`}>
+              <div className={`text-xs mt-0.5 ${activeView === 'organizer_dashboard' ? 'text-stone-200' : 'text-stone-500'}`}>
                 Riepilogo generale e avanzamento
               </div>
             </button>
@@ -162,29 +191,13 @@ export const SidebarDrawer: React.FC = () => {
               onClick={() => handleNavigate('organizer_gifts')}
               className={`w-full text-left p-3.5 rounded-xl transition-all cursor-pointer ${
                 activeView === 'organizer_gifts'
-                  ? 'bg-stone-900 text-white shadow-sm'
+                  ? 'bg-[#636842] text-white shadow-sm'
                   : 'text-stone-800 hover:bg-[#BCBF97]/20 hover:text-stone-950'
               }`}
             >
               <div className="text-sm font-semibold">Gestisci Lista</div>
-              <div className={`text-xs mt-0.5 ${activeView === 'organizer_gifts' ? 'text-stone-300' : 'text-stone-500'}`}>
+              <div className={`text-xs mt-0.5 ${activeView === 'organizer_gifts' ? 'text-stone-200' : 'text-stone-500'}`}>
                 {gifts.length} desideri · quote libere
-              </div>
-            </button>
-
-            {/* Immagine della Home */}
-            <button
-              type="button"
-              onClick={() => handleNavigate('organizer_image')}
-              className={`w-full text-left p-3.5 rounded-xl transition-all cursor-pointer ${
-                activeView === 'organizer_image'
-                  ? 'bg-stone-900 text-white shadow-sm'
-                  : 'text-stone-800 hover:bg-[#FFE68A]/25 hover:text-stone-950'
-              }`}
-            >
-              <div className="text-sm font-semibold">Immagine della Home</div>
-              <div className={`text-xs mt-0.5 ${activeView === 'organizer_image' ? 'text-stone-300' : 'text-stone-500'}`}>
-                Foto di copertina della lista
               </div>
             </button>
 
@@ -194,12 +207,12 @@ export const SidebarDrawer: React.FC = () => {
               onClick={() => handleNavigate('organizer_paypal')}
               className={`w-full text-left p-3.5 rounded-xl transition-all cursor-pointer ${
                 activeView === 'organizer_paypal'
-                  ? 'bg-stone-900 text-white shadow-sm'
+                  ? 'bg-[#636842] text-white shadow-sm'
                   : 'text-stone-800 hover:bg-[#A6C1D8]/25 hover:text-stone-950'
               }`}
             >
               <div className="text-sm font-semibold">Gestisci Pagamenti</div>
-              <div className={`text-xs mt-0.5 ${activeView === 'organizer_paypal' ? 'text-stone-300' : 'text-stone-500'}`}>
+              <div className={`text-xs mt-0.5 ${activeView === 'organizer_paypal' ? 'text-stone-200' : 'text-stone-500'}`}>
                 PayPal ({settings.currency}{paypalTotal.toLocaleString()}) e coordinate IBAN
               </div>
             </button>
@@ -210,7 +223,7 @@ export const SidebarDrawer: React.FC = () => {
               onClick={() => handleNavigate('organizer_thanks')}
               className={`w-full text-left p-3.5 rounded-xl transition-all cursor-pointer ${
                 activeView === 'organizer_thanks'
-                  ? 'bg-stone-900 text-white shadow-sm'
+                  ? 'bg-[#636842] text-white shadow-sm'
                   : 'text-stone-800 hover:bg-[#FFE68A]/30 hover:text-stone-950'
               }`}
             >
@@ -222,7 +235,7 @@ export const SidebarDrawer: React.FC = () => {
                   </span>
                 )}
               </div>
-              <div className={`text-xs mt-0.5 ${activeView === 'organizer_thanks' ? 'text-stone-300' : 'text-stone-500'}`}>
+              <div className={`text-xs mt-0.5 ${activeView === 'organizer_thanks' ? 'text-stone-200' : 'text-stone-500'}`}>
                 WhatsApp, Email e dediche personalizzate
               </div>
             </button>
@@ -233,12 +246,12 @@ export const SidebarDrawer: React.FC = () => {
               onClick={() => handleNavigate('organizer_stats')}
               className={`w-full text-left p-3.5 rounded-xl transition-all cursor-pointer ${
                 activeView === 'organizer_stats'
-                  ? 'bg-stone-900 text-white shadow-sm'
+                  ? 'bg-[#636842] text-white shadow-sm'
                   : 'text-stone-800 hover:bg-stone-100 hover:text-stone-950'
               }`}
             >
               <div className="text-sm font-semibold">Statistiche</div>
-              <div className={`text-xs mt-0.5 ${activeView === 'organizer_stats' ? 'text-stone-300' : 'text-stone-500'}`}>
+              <div className={`text-xs mt-0.5 ${activeView === 'organizer_stats' ? 'text-stone-200' : 'text-stone-500'}`}>
                 Canali, andamento e preferenze regali
               </div>
             </button>
@@ -249,12 +262,12 @@ export const SidebarDrawer: React.FC = () => {
               onClick={() => handleNavigate('organizer_guests')}
               className={`w-full text-left p-3.5 rounded-xl transition-all cursor-pointer ${
                 activeView === 'organizer_guests'
-                  ? 'bg-stone-900 text-white shadow-sm'
+                  ? 'bg-[#636842] text-white shadow-sm'
                   : 'text-stone-800 hover:bg-stone-100 hover:text-stone-950'
               }`}
             >
               <div className="text-sm font-semibold">Rubrica Invitati & Donazioni</div>
-              <div className={`text-xs mt-0.5 ${activeView === 'organizer_guests' ? 'text-stone-300' : 'text-stone-500'}`}>
+              <div className={`text-xs mt-0.5 ${activeView === 'organizer_guests' ? 'text-stone-200' : 'text-stone-500'}`}>
                 {guests.length} invitati · schede profilo
               </div>
             </button>
@@ -270,12 +283,12 @@ export const SidebarDrawer: React.FC = () => {
               onClick={() => handleNavigate('organizer_embed')}
               className={`w-full text-left p-3.5 rounded-xl transition-all cursor-pointer border ${
                 activeView === 'organizer_embed'
-                  ? 'bg-stone-900 text-white border-stone-900 shadow-sm'
+                  ? 'bg-[#636842] text-white border-[#636842] shadow-sm'
                   : 'bg-[#FFE68A]/20 hover:bg-[#FFE68A]/35 text-stone-900 border-[#FFE68A]'
               }`}
             >
               <div className="text-sm font-semibold">Codice per il Tuo Sito</div>
-              <div className={`text-xs mt-0.5 ${activeView === 'organizer_embed' ? 'text-stone-300' : 'text-stone-600'}`}>
+              <div className={`text-xs mt-0.5 ${activeView === 'organizer_embed' ? 'text-stone-200' : 'text-stone-600'}`}>
                 Copia codice iframe, widget e link per il sito
               </div>
             </button>

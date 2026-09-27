@@ -274,7 +274,7 @@ export const PayPalPayoutSettings: React.FC = () => {
                 )}
                 <button
                   type="submit"
-                  className="py-2.5 px-6 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer"
+                  className="py-2.5 px-6 bg-[#636842] hover:bg-[#525636] text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer"
                 >
                   Salva Coordinate
                 </button>
@@ -322,7 +322,7 @@ export const PayPalPayoutSettings: React.FC = () => {
               type="button"
               onClick={handleReconcileToPayPal}
               disabled={isReconciling}
-              className="w-full py-3 px-4 bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3 px-4 bg-[#636842] hover:bg-[#525636] text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               {isReconciling ? (
                 <span>Riconciliazione in corso...</span>
@@ -351,8 +351,8 @@ export const PayPalPayoutSettings: React.FC = () => {
                   key={amt}
                   type="button"
                   onClick={() => setTestAmount(amt)}
-                  className={`py-1 px-2.5 rounded text-xs font-medium cursor-pointer ${
-                    testAmount === amt ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-700'
+                  className={`py-1 px-2.5 rounded-lg text-xs font-semibold cursor-pointer ${
+                    testAmount === amt ? 'bg-[#636842] text-white shadow-2xs' : 'bg-stone-100 text-stone-700'
                   }`}
                 >
                   {settings.currency}{amt}

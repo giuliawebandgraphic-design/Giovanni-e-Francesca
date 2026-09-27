@@ -171,11 +171,20 @@ export const EmbedCodePage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveView('embed_view')}
+            className="flex items-center gap-2 py-2.5 px-4 bg-[#BCBF97]/30 hover:bg-[#BCBF97]/50 text-stone-900 border border-[#BCBF97] text-xs font-semibold rounded-xl shadow-2xs transition-colors cursor-pointer"
+            title="Visualizza esattamente la schermata che vedranno i tuoi invitati all'interno dell'iframe"
+          >
+            <Eye className="w-4 h-4 text-[#636842]" />
+            <span>Anteprima Embed (Senza Menù)</span>
+          </button>
           <button
             type="button"
             onClick={handleCopyCode}
-            className="flex items-center gap-2 py-2.5 px-4 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer"
+            className="flex items-center gap-2 py-2.5 px-4 bg-[#636842] hover:bg-[#525636] text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer"
           >
             {copiedCode ? (
               <>
@@ -468,7 +477,7 @@ export const EmbedCodePage: React.FC = () => {
                   onClick={() => setCustomOrigin('*')}
                   className={`px-3 py-1.5 text-xs font-semibold rounded-xl border transition-colors cursor-pointer ${
                     customOrigin === '*'
-                      ? 'bg-stone-900 text-white border-stone-900'
+                      ? 'bg-[#636842] text-white border-[#636842]'
                       : 'bg-white text-stone-700 border-stone-300 hover:bg-stone-50'
                   }`}
                 >
@@ -512,7 +521,7 @@ export const EmbedCodePage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => downloadFile('vercel.json', vercelJsonContent)}
-                    className="p-1.5 bg-stone-900 hover:bg-stone-800 text-white rounded-lg transition-colors cursor-pointer"
+                    className="p-1.5 bg-[#636842] hover:bg-[#525636] text-white rounded-lg transition-colors cursor-pointer"
                     title="Scarica vercel.json"
                   >
                     <Download className="w-3.5 h-3.5" />
@@ -550,7 +559,7 @@ export const EmbedCodePage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => downloadFile('_headers', headersFileContent)}
-                    className="p-1.5 bg-stone-900 hover:bg-stone-800 text-white rounded-lg transition-colors cursor-pointer"
+                    className="p-1.5 bg-[#636842] hover:bg-[#525636] text-white rounded-lg transition-colors cursor-pointer"
                     title="Scarica _headers"
                   >
                     <Download className="w-3.5 h-3.5" />
@@ -677,7 +686,7 @@ export const EmbedCodePage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setActiveView('guest_registry')}
-                      className="w-full py-2 bg-stone-900 text-white rounded text-xs font-semibold"
+                      className="w-full py-2 bg-[#636842] hover:bg-[#525636] text-white rounded text-xs font-semibold cursor-pointer"
                     >
                       Apri Lista Regali &rarr;
                     </button>
@@ -698,7 +707,7 @@ export const EmbedCodePage: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleCopyCode}
-                      className="py-1.5 px-4 bg-stone-900 text-white rounded-lg text-xs font-medium"
+                      className="py-1.5 px-4 bg-[#636842] hover:bg-[#525636] text-white rounded-lg text-xs font-medium cursor-pointer"
                     >
                       {copiedCode ? 'Copiato!' : 'Copia Link'}
                     </button>

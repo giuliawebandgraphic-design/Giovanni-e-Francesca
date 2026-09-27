@@ -156,9 +156,9 @@ export const ThanksManager: React.FC = () => {
           <button
             type="button"
             onClick={() => setFilter('pending')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-colors cursor-pointer ${
               filter === 'pending'
-                ? 'bg-stone-900 text-white'
+                ? 'bg-[#636842] text-white shadow-xs'
                 : 'bg-stone-100 text-stone-600 hover:text-stone-900'
             }`}
           >
@@ -167,9 +167,9 @@ export const ThanksManager: React.FC = () => {
           <button
             type="button"
             onClick={() => setFilter('sent')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-colors cursor-pointer ${
               filter === 'sent'
-                ? 'bg-stone-900 text-white'
+                ? 'bg-[#636842] text-white shadow-xs'
                 : 'bg-stone-100 text-stone-600 hover:text-stone-900'
             }`}
           >
@@ -178,9 +178,9 @@ export const ThanksManager: React.FC = () => {
           <button
             type="button"
             onClick={() => setFilter('all')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-colors cursor-pointer ${
               filter === 'all'
-                ? 'bg-stone-900 text-white'
+                ? 'bg-[#636842] text-white shadow-xs'
                 : 'bg-stone-100 text-stone-600 hover:text-stone-900'
             }`}
           >
@@ -356,7 +356,7 @@ export const ThanksManager: React.FC = () => {
                         onClick={() => {
                           if (!don.thankYouSent) handleMarkAsSent(don);
                         }}
-                        className="inline-flex items-center gap-1.5 py-2 px-3.5 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold shadow-2xs transition-all"
+                        className="inline-flex items-center gap-1.5 py-2 px-3.5 bg-[#636842] hover:bg-[#525636] text-white rounded-xl text-xs font-semibold shadow-2xs transition-all"
                       >
                         <Mail className="w-3.5 h-3.5" />
                         <span>Invia Email</span>

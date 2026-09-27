@@ -143,7 +143,7 @@ export const HomeImageManager: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveView('guest_registry')}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#636842] hover:bg-[#525636] text-white rounded-xl text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
           >
             <Eye className="w-3.5 h-3.5" />
             <span>Vedi nella Home</span>
@@ -261,7 +261,7 @@ export const HomeImageManager: React.FC = () => {
                 />
                 <button
                   type="submit"
-                  className="px-4 py-2.5 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                  className="px-4 py-2.5 bg-[#636842] hover:bg-[#525636] text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer"
                 >
                   Applica Link
                 </button>

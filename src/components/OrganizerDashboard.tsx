@@ -62,16 +62,16 @@ export const OrganizerDashboard: React.FC = () => {
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setActiveView('organizer_image')}
+              onClick={() => setActiveView('organizer_gifts')}
               className="flex items-center gap-2 py-2 px-3.5 bg-white hover:bg-stone-50 text-stone-900 text-xs font-semibold rounded-xl border border-stone-300 shadow-2xs transition-all cursor-pointer"
             >
-              <Camera className="w-3.5 h-3.5 text-[#636842]" />
-              <span>Immagine Home</span>
+              <Gift className="w-3.5 h-3.5 text-[#636842]" />
+              <span>Aggiungi / Modifica Regali</span>
             </button>
 
             <button
               onClick={() => setActiveView('guest_registry')}
-              className="flex items-center gap-2 py-2 px-3.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold rounded-xl shadow-2xs transition-all cursor-pointer"
+              className="flex items-center gap-2 py-2 px-3.5 bg-[#636842] hover:bg-[#525636] text-white text-xs font-semibold rounded-xl shadow-2xs transition-all cursor-pointer"
             >
               <span>Anteprima Invitati</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -361,18 +361,6 @@ export const OrganizerDashboard: React.FC = () => {
                   <span className="font-semibold">Gestisci Lista ({gifts.length} regali)</span>
                 </div>
                 <ChevronRight className="w-3.5 h-3.5 text-stone-400 group-hover:text-stone-800" />
-              </button>
-
-              {/* Immagine della Home */}
-              <button
-                onClick={() => setActiveView('organizer_image')}
-                className="w-full py-2.5 px-3 bg-[#FFE68A]/15 hover:bg-[#FFE68A]/30 border border-transparent hover:border-amber-300 rounded-xl text-stone-800 font-medium text-left flex items-center justify-between transition-all cursor-pointer group"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                  <span className="font-semibold">Immagine della Home</span>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 text-amber-700 group-hover:text-stone-900" />
               </button>
 
               {/* Gestisci Pagamenti */}

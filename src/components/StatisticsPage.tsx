@@ -225,7 +225,7 @@ export const StatisticsPage: React.FC = () => {
                     </div>
                     <div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-stone-800 rounded-full"
+                        className="h-full bg-[#636842] rounded-full"
                         style={{ width: `${catPercent}%` }}
                       />
                     </div>
