@@ -62,6 +62,7 @@ interface RegistryContextType {
   paypalTotal: number;
   bankTotal: number;
   getPayPalLink: (amount: number, referenceCode: string, note?: string) => string;
+  refreshRegistry: () => Promise<void>;
 }
 
 const RegistryContext = createContext<RegistryContextType | undefined>(undefined);
@@ -140,20 +141,159 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   });
   const [selectedGuestIdForDrawer, setSelectedGuestIdForDrawer] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
-
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
-  // Sync to local storage and broadcast to all open iframes / tabs
+  const isRemoteUpdatingRef = React.useRef<boolean>(false);
+  const serverVersionRef = React.useRef<number>(1);
+
+  // Function to pull latest registry from server
+  const refreshRegistry = async () => {
+    try {
+      const res = await fetch('/api/registry');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data && Array.isArray(data.gifts)) {
+        isRemoteUpdatingRef.current = true;
+        serverVersionRef.current = data.version || 1;
+
+        setGifts(data.gifts);
+        if (Array.isArray(data.guests)) setGuests(data.guests);
+        if (Array.isArray(data.donations)) setDonations(data.donations);
+        if (data.settings && typeof data.settings === 'object') setSettings(data.settings);
+
+        try {
+          localStorage.setItem(STORAGE_KEYS.GIFTS, JSON.stringify(data.gifts));
+          if (data.guests) localStorage.setItem(STORAGE_KEYS.GUESTS, JSON.stringify(data.guests));
+          if (data.donations) localStorage.setItem(STORAGE_KEYS.DONATIONS, JSON.stringify(data.donations));
+          if (data.settings) localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(data.settings));
+        } catch {
+          // ignore storage error
+        }
+
+        setTimeout(() => {
+          isRemoteUpdatingRef.current = false;
+        }, 150);
+      }
+    } catch (err) {
+      console.warn('Could not fetch registry from server:', err);
+    }
+  };
+
+  // Helper to push state changes to the server
+  const pushSyncToServer = async (payload: {
+    gifts?: GiftItem[];
+    guests?: Guest[];
+    donations?: Donation[];
+    settings?: RegistrySettings;
+  }) => {
+    if (isRemoteUpdatingRef.current) return;
+    try {
+      const res = await fetch('/api/registry/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        if (result && result.version) {
+          serverVersionRef.current = result.version;
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to sync changes to server:', err);
+    }
+  };
+
+  // 1. Initial server fetch on mount
+  useEffect(() => {
+    refreshRegistry();
+  }, []);
+
+  // 2. Real-time background sync: SSE + fast polling (every 2.5s) + focus listener
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // A. Server-Sent Events (SSE) for instant push
+    let eventSource: EventSource | null = null;
+    try {
+      eventSource = new EventSource('/api/registry/events');
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data && data.type === 'REGISTRY_UPDATED') {
+            if (data.version && data.version > serverVersionRef.current) {
+              refreshRegistry();
+            }
+          }
+        } catch {
+          // ignore
+        }
+      };
+      eventSource.onerror = () => {
+        // SSE connection error fallback to polling
+      };
+    } catch {
+      // EventSource not supported or blocked
+    }
+
+    // B. Fast Polling (checks lightweight version every 2.5s)
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/registry/version');
+        if (!res.ok) return;
+        const info = await res.json();
+        if (info && info.version && info.version > serverVersionRef.current) {
+          refreshRegistry();
+        }
+      } catch {
+        // ignore network error
+      }
+    }, 2500);
+
+    // C. Refresh immediately when window/iframe gains focus or becomes visible
+    const handleFocus = () => {
+      refreshRegistry();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        refreshRegistry();
+      }
+    });
+
+    // D. Cross-window BroadcastChannel listener (same origin tabs)
+    let channel: BroadcastChannel | null = null;
+    if ('BroadcastChannel' in window) {
+      channel = new BroadcastChannel('given2_live_sync');
+      channel.onmessage = (event) => {
+        if (!event.data || !event.data.type) return;
+        refreshRegistry();
+      };
+    }
+
+    return () => {
+      if (eventSource) eventSource.close();
+      clearInterval(pollInterval);
+      window.removeEventListener('focus', handleFocus);
+      if (channel) channel.close();
+    };
+  }, []);
+
+  // Sync to local storage & push to server whenever state changes locally
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEYS.GIFTS, JSON.stringify(gifts));
       if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
         const channel = new BroadcastChannel('given2_live_sync');
-        channel.postMessage({ type: 'GIFTS_UPDATED', payload: gifts });
+        channel.postMessage({ type: 'GIFTS_UPDATED' });
         channel.close();
       }
     } catch {
       // ignore
+    }
+    if (!isRemoteUpdatingRef.current) {
+      pushSyncToServer({ gifts });
     }
   }, [gifts]);
 
@@ -162,11 +302,14 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       localStorage.setItem(STORAGE_KEYS.GUESTS, JSON.stringify(guests));
       if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
         const channel = new BroadcastChannel('given2_live_sync');
-        channel.postMessage({ type: 'GUESTS_UPDATED', payload: guests });
+        channel.postMessage({ type: 'GUESTS_UPDATED' });
         channel.close();
       }
     } catch {
       // ignore
+    }
+    if (!isRemoteUpdatingRef.current) {
+      pushSyncToServer({ guests });
     }
   }, [guests]);
 
@@ -175,11 +318,14 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       localStorage.setItem(STORAGE_KEYS.DONATIONS, JSON.stringify(donations));
       if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
         const channel = new BroadcastChannel('given2_live_sync');
-        channel.postMessage({ type: 'DONATIONS_UPDATED', payload: donations });
+        channel.postMessage({ type: 'DONATIONS_UPDATED' });
         channel.close();
       }
     } catch {
       // ignore
+    }
+    if (!isRemoteUpdatingRef.current) {
+      pushSyncToServer({ donations });
     }
   }, [donations]);
 
@@ -188,63 +334,16 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
       if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
         const channel = new BroadcastChannel('given2_live_sync');
-        channel.postMessage({ type: 'SETTINGS_UPDATED', payload: settings });
+        channel.postMessage({ type: 'SETTINGS_UPDATED' });
         channel.close();
       }
     } catch {
       // ignore
     }
-  }, [settings]);
-
-  // Real-time synchronization listener for iframes and multiple tabs
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    // 1. BroadcastChannel listener (instant across tabs and iframes on same origin)
-    let channel: BroadcastChannel | null = null;
-    if ('BroadcastChannel' in window) {
-      channel = new BroadcastChannel('given2_live_sync');
-      channel.onmessage = (event) => {
-        if (!event.data || !event.data.type) return;
-        if (event.data.type === 'GIFTS_UPDATED' && event.data.payload) {
-          setGifts(event.data.payload);
-        } else if (event.data.type === 'GUESTS_UPDATED' && event.data.payload) {
-          setGuests(event.data.payload);
-        } else if (event.data.type === 'DONATIONS_UPDATED' && event.data.payload) {
-          setDonations(event.data.payload);
-        } else if (event.data.type === 'SETTINGS_UPDATED' && event.data.payload) {
-          setSettings(event.data.payload);
-        }
-      };
+    if (!isRemoteUpdatingRef.current) {
+      pushSyncToServer({ settings });
     }
-
-    // 2. Storage event listener (standard browser cross-window storage event)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (!e.newValue) return;
-      try {
-        if (e.key === STORAGE_KEYS.GIFTS) {
-          setGifts(JSON.parse(e.newValue));
-        } else if (e.key === STORAGE_KEYS.GUESTS) {
-          setGuests(JSON.parse(e.newValue));
-        } else if (e.key === STORAGE_KEYS.DONATIONS) {
-          setDonations(JSON.parse(e.newValue));
-        } else if (e.key === STORAGE_KEYS.SETTINGS) {
-          setSettings(JSON.parse(e.newValue));
-        }
-      } catch {
-        // ignore parse error
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      if (channel) {
-        channel.close();
-      }
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
+  }, [settings]);
 
   useEffect(() => {
     try {
@@ -506,6 +605,7 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         paypalTotal,
         bankTotal,
         getPayPalLink,
+        refreshRegistry,
       }}
     >
       {children}

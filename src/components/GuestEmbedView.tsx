@@ -5,10 +5,26 @@ import { ContributeModal } from './ContributeModal';
 import { Search, Gift, ArrowRight } from 'lucide-react';
 
 export const GuestEmbedView: React.FC = () => {
-  const { gifts, settings } = useRegistry();
+  const { gifts, settings, refreshRegistry } = useRegistry();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeGiftForContribute, setActiveGiftForContribute] = useState<GiftItem | null>(null);
+
+  // Auto-fetch fresh registry data on mount and listen to refresh messages
+  useEffect(() => {
+    refreshRegistry();
+
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data && (event.data.type === 'GIVEN2_REFRESH' || event.data.type === 'REGISTRY_UPDATED')) {
+        refreshRegistry();
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, []);
 
   // Post dynamic height to parent container (so external website iframe auto-resizes seamlessly without scrollbars)
   useEffect(() => {
