@@ -27,41 +27,27 @@ const MainContent: React.FC = () => {
     const isExternalEmbed = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('embed') === 'true';
 
     return (
-      <div className="w-full min-h-screen bg-[#FAF9F5]">
-        {/* Helper bar to easily return to the Organizer Dashboard when testing */}
+      <div className="w-full min-h-screen bg-transparent">
+        {/* Helper bar shown ONLY when the couple is testing the embed preview internally */}
         {!isExternalEmbed && (
-          <div className="sticky top-0 z-50 bg-[#636842] text-white px-4 py-2.5 shadow-md flex items-center justify-between text-xs">
+          <div className="sticky top-0 z-50 bg-[#636842] text-white px-4 py-2 shadow-xs flex items-center justify-between text-xs">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-[#FFE68A] animate-pulse"></span>
               <span className="font-semibold">
-                Anteprima Iframe: Vista Solo Invitati (Senza Menù)
+                Anteprima Iframe: Vista Solo Desideri (Zero Titoli, Zero Link Piattaforma)
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setActiveView('organizer_dashboard')}
-                className="px-3 py-1.5 bg-white text-[#484c2e] hover:bg-stone-100 font-bold rounded-lg shadow-xs transition-all cursor-pointer flex items-center gap-1"
-              >
-                <span>&larr; Vai alla Dashboard Sposi</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setActiveView('organizer_dashboard')}
+              className="px-3 py-1 bg-white text-[#484c2e] hover:bg-stone-100 font-bold rounded-lg shadow-xs transition-all cursor-pointer flex items-center gap-1"
+            >
+              <span>&larr; Vai alla Dashboard Sposi</span>
+            </button>
           </div>
         )}
 
         <GuestEmbedView />
-
-        {/* Floating pill in bottom right for immediate exit back to dashboard anytime */}
-        <div className="fixed bottom-4 right-4 z-50">
-          <button
-            type="button"
-            onClick={() => setActiveView('organizer_dashboard')}
-            className="px-4 py-2.5 bg-[#636842] hover:bg-[#525636] text-white text-xs font-bold rounded-xl shadow-xl transition-all cursor-pointer flex items-center gap-2 border-2 border-white"
-            title="Torna alla Dashboard Gestione Sposi"
-          >
-            <span>&larr; Torna alla Dashboard Sposi</span>
-          </button>
-        </div>
       </div>
     );
   }

@@ -357,17 +357,12 @@ export const EmbedCodePage: React.FC = () => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-stone-600 mb-1 font-medium">Copertina:</label>
-                  <label className="flex items-center gap-2 pt-1.5 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={showCoverInEmbed}
-                      onChange={(e) => setShowCoverInEmbed(e.target.checked)}
-                      className="rounded text-[#636842] focus:ring-[#BCBF97]"
-                    />
-                    <span className="text-stone-700">Mostra banner foto</span>
-                  </label>
+                <div className="col-span-1 sm:col-span-2">
+                  <span className="block text-stone-600 mb-1 font-medium">Integrazione Pulita:</span>
+                  <div className="p-2.5 bg-[#BCBF97]/15 rounded-xl border border-[#BCBF97]/40 text-[11px] text-[#484c2e] flex items-center gap-1.5 font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#636842] shrink-0" />
+                    <span>L'iframe include <strong>esclusivamente la griglia dei desideri</strong> (senza titoli, senza foto copertina e senza link alla piattaforma).</span>
+                  </div>
                 </div>
               </div>
             </div>
