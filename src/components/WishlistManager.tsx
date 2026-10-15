@@ -6,13 +6,8 @@ import { Plus, Edit2, Trash2, CheckCircle2, Star, Gift, Filter, ArrowUpRight } f
 
 export const WishlistManager: React.FC = () => {
   const { gifts, settings, deleteGift, updateGift, loadDemoGifts, setActiveView } = useRegistry();
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [giftToEdit, setGiftToEdit] = useState<GiftItem | null>(null);
-
-  const filteredGifts = gifts.filter(
-    (g) => selectedCategory === 'all' || g.category === selectedCategory
-  );
 
   const handleOpenAdd = () => {
     setGiftToEdit(null);
@@ -64,32 +59,6 @@ export const WishlistManager: React.FC = () => {
         </div>
       </div>
 
-      {/* Category Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2">
-        {['all', 'honeymoon', 'home', 'experience', 'custom'].map((catKey) => (
-          <button
-            key={catKey}
-            type="button"
-            onClick={() => setSelectedCategory(catKey)}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-colors cursor-pointer capitalize ${
-              selectedCategory === catKey
-                ? 'bg-[#636842] text-white shadow-xs'
-                : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
-            }`}
-          >
-            {catKey === 'all'
-              ? 'Tutti i Prodotti'
-              : catKey === 'honeymoon'
-              ? 'Luna di Miele'
-              : catKey === 'home'
-              ? 'Casa & Arredo'
-              : catKey === 'experience'
-              ? 'Esperienze'
-              : 'Fondo Libero'}
-          </button>
-        ))}
-      </div>
-
       {/* Gifts Grid */}
       {gifts.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-stone-300 p-8 space-y-4 max-w-lg mx-auto shadow-2xs">
@@ -111,13 +80,9 @@ export const WishlistManager: React.FC = () => {
             <span>Aggiungi il Primo Regalo</span>
           </button>
         </div>
-      ) : filteredGifts.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-2xl border border-stone-200">
-          <p className="text-stone-500 text-xs">Nessun regalo in questa categoria.</p>
-        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredGifts.map((gift) => {
+          {gifts.map((gift) => {
           const isCompleted = gift.status === 'completed';
           const percent = gift.isInfiniteQuota
             ? 100
@@ -187,13 +152,10 @@ export const WishlistManager: React.FC = () => {
                 {/* Body */}
                 <div className="p-5 space-y-3">
                   <div>
-                    <span className="text-[10px] uppercase tracking-wider text-stone-400 font-semibold">
-                      {gift.category}
-                    </span>
-                    <h4 className="font-editorial text-xl font-bold text-stone-900 leading-tight mt-0.5">
+                    <h4 className="font-editorial text-xl font-bold text-stone-900 leading-tight">
                       {gift.title}
                     </h4>
-                    <p className="text-xs text-stone-500 line-clamp-1">{gift.subtitle}</p>
+                    <p className="text-xs text-stone-500 line-clamp-1 mt-0.5">{gift.subtitle}</p>
                   </div>
 
                   <p className="text-xs text-stone-600 line-clamp-2 leading-relaxed">

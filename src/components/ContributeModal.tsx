@@ -338,41 +338,6 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
                     </div>
                   </label>
 
-                  {/* Apple Pay option */}
-                  {settings.applePayEnabled !== false && (
-                    <label
-                      className={`block p-4 rounded-xl border transition-all cursor-pointer ${
-                        paymentMethod === 'apple_pay'
-                          ? 'border-stone-900 bg-stone-50 ring-1 ring-stone-900'
-                          : 'border-stone-200 bg-white hover:bg-stone-50'
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <input
-                          type="radio"
-                          name="paymentMethod"
-                          value="apple_pay"
-                          checked={paymentMethod === 'apple_pay'}
-                          onChange={() => setPaymentMethod('apple_pay')}
-                          className="mt-1 text-stone-900 focus:ring-stone-800"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <span className="font-semibold text-stone-900 text-sm flex items-center gap-1.5">
-                              <span className="text-base font-bold"></span> Apple Pay
-                            </span>
-                            <span className="text-[11px] font-bold text-white bg-stone-900 px-2 py-0.5 rounded">
-                              1 Tocco
-                            </span>
-                          </div>
-                          <p className="text-xs text-stone-600 mt-1">
-                            Paga in un istante con Touch ID o Face ID da iPhone, iPad, Mac o carte salvate nel Wallet.
-                          </p>
-                        </div>
-                      </div>
-                    </label>
-                  )}
-
                   {/* Bank Transfer option */}
                   <label
                     className={`block p-4 rounded-xl border transition-all cursor-pointer ${
@@ -404,33 +369,6 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
               </div>
 
               {/* Method-specific instructions box */}
-              {paymentMethod === 'apple_pay' && (
-                <div className="p-4 bg-stone-900 text-white rounded-xl space-y-3 shadow-md">
-                  <div className="flex items-center justify-between text-xs font-semibold">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base font-bold"></span>
-                      <span>Pagamento con Apple Pay</span>
-                    </div>
-                    <span className="text-[10px] text-stone-300 font-medium">
-                      Accredito a {settings.applePayRecipient || settings.coupleNames}
-                    </span>
-                  </div>
-                  <p className="text-xs text-stone-300 leading-relaxed">
-                    Puoi inviare la tua quota di <strong>{settings.currency}{activeAmount}</strong> in modo sicuro con Face ID, Touch ID o codice sul tuo dispositivo Apple.
-                    {settings.applePayNote ? ` (${settings.applePayNote})` : ''}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleCompleteContribution}
-                    disabled={isSubmitting}
-                    className="w-full py-3 px-4 bg-white text-stone-950 hover:bg-stone-100 font-bold rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md"
-                  >
-                    <span className="text-lg leading-none"></span>
-                    <span className="text-sm">Paga {settings.currency}{activeAmount} con Apple Pay</span>
-                  </button>
-                </div>
-              )}
-
               {paymentMethod === 'paypal' && (
                 <div className="p-4 bg-sky-50 rounded-xl border border-sky-100 space-y-3">
                   <div className="flex items-center gap-2 text-xs font-semibold text-sky-900">

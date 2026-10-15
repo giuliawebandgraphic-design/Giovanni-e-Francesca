@@ -140,7 +140,7 @@ export const EmbedCodePage: React.FC = () => {
   const cardCode = `<!-- Card Lista Nozze Compatta -->
 <div style="max-width: 380px; padding: 20px; background: #ffffff; border-radius: 16px; border: 1px solid #e7e5e4; font-family: 'Montserrat', system-ui, sans-serif; box-shadow: 0 4px 14px rgba(0,0,0,0.05); text-align: center;">
   <h3 style="font-family: 'Montserrat', sans-serif; font-size: 22px; font-weight: 700; margin: 0 0 6px; color: #1c1917;">${settings.coupleNames}</h3>
-  <p style="font-size: 13px; color: #78716c; margin: 0 0 16px;">Il nostro Matrimonio · 19 Luglio 2026</p>
+  <p style="font-size: 13px; color: #78716c; margin: 0 0 16px;">${settings.eventTitle}</p>
   <div style="background: #fafaf9; padding: 12px; border-radius: 10px; margin-bottom: 16px; font-size: 13px; color: #44403c;">
     <strong>${gifts.length} Desideri</strong> disponibili con quota libera PayPal o Bonifico.
   </div>

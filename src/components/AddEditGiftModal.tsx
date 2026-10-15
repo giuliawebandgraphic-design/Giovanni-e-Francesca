@@ -250,7 +250,6 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
                     <Eye className="w-3.5 h-3.5" />
                     <span>Anteprima Card per gli Invitati</span>
                   </span>
-                  <span>{categoryLabels[category]}</span>
                 </div>
 
                 <div className="bg-white rounded-xl border border-stone-200 overflow-hidden shadow-2xs">
@@ -331,24 +330,6 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
                   onChange={(e) => setSubtitle(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-stone-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#BCBF97] focus:bg-white"
                 />
-              </div>
-
-              {/* Categoria */}
-              <div>
-                <label className="block text-xs font-bold text-stone-900 mb-1">
-                  Categoria del Regalo
-                </label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value as GiftCategory)}
-                  className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-stone-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#BCBF97] focus:bg-white font-medium cursor-pointer"
-                >
-                  <option value="honeymoon">Luna di Miele</option>
-                  <option value="home">Casa & Arredo</option>
-                  <option value="experience">Esperienze</option>
-                  <option value="tech">Tecnologia & Hobby</option>
-                  <option value="custom">Fondo Libero</option>
-                </select>
               </div>
 
               {/* Obiettivo del Desiderio: Scelta tra Traguardo con Obiettivo o Salvadanaio Libero */}

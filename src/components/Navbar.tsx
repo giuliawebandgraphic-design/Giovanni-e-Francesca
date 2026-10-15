@@ -49,10 +49,6 @@ export const Navbar: React.FC = () => {
               <span className="text-xs sm:text-sm font-semibold tracking-normal text-stone-900">
                 {settings.coupleNames}
               </span>
-              <span className="hidden sm:inline-block text-stone-300 font-light">|</span>
-              <span className="hidden sm:inline-block text-[11px] uppercase tracking-widest text-stone-500 font-medium">
-                19 Luglio 2026
-              </span>
             </div>
           </div>
 

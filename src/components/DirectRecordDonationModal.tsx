@@ -111,7 +111,7 @@ export const DirectRecordDonationModal: React.FC<DirectRecordDonationModalProps>
             <label className="block text-xs font-semibold text-stone-800 mb-1.5">
               Canale di versamento *
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setPaymentMethod('paypal')}
@@ -122,17 +122,6 @@ export const DirectRecordDonationModal: React.FC<DirectRecordDonationModalProps>
                 }`}
               >
                 PayPal
-              </button>
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('apple_pay')}
-                className={`py-2 px-2 text-xs font-medium rounded-lg border text-center transition-all cursor-pointer ${
-                  paymentMethod === 'apple_pay'
-                    ? 'bg-stone-900 border-stone-900 text-white font-semibold ring-1 ring-stone-900'
-                    : 'bg-stone-50 border-stone-200 text-stone-700 hover:bg-stone-100'
-                }`}
-              >
-                 Apple Pay
               </button>
               <button
                 type="button"

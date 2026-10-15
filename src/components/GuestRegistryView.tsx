@@ -26,15 +26,6 @@ export const GuestRegistryView: React.FC = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14 text-center space-y-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#BCBF97]/25 text-[#484c2e] text-xs font-semibold tracking-wider uppercase">
-              <Calendar className="w-3.5 h-3.5 text-[#636842]" />
-              <span>
-                {new Date(settings.eventDate).toLocaleDateString('it-IT', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                })}
-              </span>
-              <span className="text-stone-300">·</span>
               <MapPin className="w-3.5 h-3.5 text-[#636842]" />
               <span>{settings.eventLocation}</span>
             </div>

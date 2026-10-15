@@ -330,12 +330,10 @@ export const OrganizerDashboard: React.FC = () => {
                         className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                           don.paymentMethod === 'paypal'
                             ? 'bg-[#A6C1D8]/20 text-slate-800 border border-[#A6C1D8]/50'
-                            : don.paymentMethod === 'apple_pay'
-                            ? 'bg-stone-900 text-white'
                             : 'bg-stone-100 text-stone-700'
                         }`}
                       >
-                        {don.paymentMethod === 'paypal' ? 'PayPal' : don.paymentMethod === 'apple_pay' ? ' Apple Pay' : 'Bonifico'}
+                        {don.paymentMethod === 'paypal' ? 'PayPal' : 'Bonifico'}
                       </span>
                     </div>
                   </div>

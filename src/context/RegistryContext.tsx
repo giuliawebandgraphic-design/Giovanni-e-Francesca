@@ -63,7 +63,6 @@ interface RegistryContextType {
   totalRaised: number;
   paypalTotal: number;
   bankTotal: number;
-  applePayTotal: number;
   getPayPalLink: (amount: number, referenceCode: string, note?: string) => string;
   refreshRegistry: () => Promise<void>;
   isFirestoreConnected: boolean;
@@ -538,10 +537,6 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         params.paymentMethod === 'paypal'
           ? `PP-${Math.floor(1000000 + Math.random() * 9000000)}`
           : undefined,
-      applePayTransactionId:
-        params.paymentMethod === 'apple_pay'
-          ? `APL-${Math.floor(1000000 + Math.random() * 9000000)}`
-          : undefined,
       message: params.message || '',
       createdAt: new Date().toISOString(),
       thankYouSent: false,
@@ -688,10 +683,6 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     .filter((d) => d.paymentMethod === 'bank_transfer')
     .reduce((sum, d) => sum + d.amount, 0);
 
-  const applePayTotal = completedDonations
-    .filter((d) => d.paymentMethod === 'apple_pay')
-    .reduce((sum, d) => sum + d.amount, 0);
-
   return (
     <RegistryContext.Provider
       value={{
@@ -723,7 +714,6 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         totalRaised,
         paypalTotal,
         bankTotal,
-        applePayTotal,
         getPayPalLink,
         refreshRegistry,
         isFirestoreConnected,

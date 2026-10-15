@@ -1,6 +1,6 @@
 export type GiftCategory = 'honeymoon' | 'home' | 'experience' | 'tech' | 'custom';
 
-export type PaymentMethod = 'paypal' | 'bank_transfer' | 'apple_pay';
+export type PaymentMethod = 'paypal' | 'bank_transfer';
 
 export type DonationStatus = 'completed' | 'pending_verification' | 'pledged';
 
@@ -32,7 +32,6 @@ export interface Donation {
   paymentMethod: PaymentMethod;
   status: DonationStatus;
   paypalTransactionId?: string;
-  applePayTransactionId?: string;
   message?: string;
   createdAt: string;
   thankYouSent: boolean;
@@ -68,7 +67,4 @@ export interface RegistrySettings {
   bankName: string;
   bankBic?: string;
   heroImage: string;
-  applePayEnabled?: boolean;
-  applePayRecipient?: string;
-  applePayNote?: string;
 }

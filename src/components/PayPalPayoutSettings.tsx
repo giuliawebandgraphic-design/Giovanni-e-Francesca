@@ -20,7 +20,6 @@ export const PayPalPayoutSettings: React.FC = () => {
     updateSettings,
     paypalTotal,
     bankTotal,
-    applePayTotal,
     totalRaised,
     donations,
     getPayPalLink,
@@ -31,9 +30,6 @@ export const PayPalPayoutSettings: React.FC = () => {
   const [bankIban, setBankIban] = useState<string>(settings.bankIban);
   const [bankAccountHolder, setBankAccountHolder] = useState<string>(settings.bankAccountHolder);
   const [bankName, setBankName] = useState<string>(settings.bankName);
-  const [applePayEnabled, setApplePayEnabled] = useState<boolean>(settings.applePayEnabled ?? true);
-  const [applePayRecipient, setApplePayRecipient] = useState<string>(settings.applePayRecipient || '+39 340 8899123');
-  const [applePayNote, setApplePayNote] = useState<string>(settings.applePayNote || 'Accredito istantaneo su Apple Pay / Apple Wallet degli sposi');
   const [isSaved, setIsSaved] = useState<boolean>(false);
 
   // Test amount
@@ -49,9 +45,6 @@ export const PayPalPayoutSettings: React.FC = () => {
       bankIban: bankIban.trim(),
       bankAccountHolder: bankAccountHolder.trim(),
       bankName: bankName.trim(),
-      applePayEnabled,
-      applePayRecipient: applePayRecipient.trim(),
-      applePayNote: applePayNote.trim(),
     });
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2500);
@@ -102,10 +95,10 @@ export const PayPalPayoutSettings: React.FC = () => {
             Configurazione Pagamenti & Incassi
           </span>
           <h2 className="font-editorial text-3xl font-semibold text-stone-900">
-            Canali di Pagamento (PayPal, Apple Pay & Bonifico)
+            Canali di Pagamento (PayPal & Bonifico)
           </h2>
           <p className="text-xs text-stone-600 mt-1">
-            Configura il tuo conto PayPal, Apple Pay e le coordinate bancarie per consentire agli invitati di donare con il metodo che preferiscono.
+            Configura il tuo conto PayPal e le coordinate bancarie per consentire agli invitati di donare con il metodo che preferiscono.
           </p>
         </div>
 
@@ -122,7 +115,7 @@ export const PayPalPayoutSettings: React.FC = () => {
       </div>
 
       {/* Payout Channels Breakdown Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Total Overall */}
         <div className="p-5 bg-gradient-to-br from-white to-[#FFE68A]/25 rounded-2xl border-2 border-[#FFE68A] shadow-xs">
           <span className="text-[11px] uppercase tracking-wider text-stone-600 font-bold">
@@ -149,24 +142,6 @@ export const PayPalPayoutSettings: React.FC = () => {
           </p>
           <span className="text-[11px] text-slate-600 font-medium">
             {totalRaised > 0 ? Math.round((paypalTotal / totalRaised) * 100) : 0}% del totale
-          </span>
-        </div>
-
-        {/* Apple Pay channel */}
-        <div className="p-5 bg-gradient-to-br from-white to-stone-100 rounded-2xl border-2 border-stone-800 shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] uppercase tracking-wider text-stone-900 font-bold flex items-center gap-1">
-              <span></span> Apple Pay
-            </span>
-            <span className="text-[10px] font-bold text-white bg-stone-900 px-2 py-0.5 rounded-full shadow-2xs">
-              1 Tocco
-            </span>
-          </div>
-          <p className="font-editorial text-3xl font-bold text-stone-900 mt-1 tabular-nums">
-            {settings.currency}{applePayTotal.toLocaleString()}
-          </p>
-          <span className="text-[11px] text-stone-600 font-medium">
-            {totalRaised > 0 ? Math.round((applePayTotal / totalRaised) * 100) : 0}% del totale
           </span>
         </div>
 
@@ -288,68 +263,6 @@ export const PayPalPayoutSettings: React.FC = () => {
                 </div>
               </div>
 
-              {/* Apple Pay Settings */}
-              <div className="pt-4 border-t border-stone-200 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-lg bg-stone-900 text-white flex items-center justify-center text-xs font-bold shadow-xs">
-                      
-                    </span>
-                    <div>
-                      <span className="text-xs font-semibold text-stone-900 block">
-                        Apple Pay (Pagamento Rapido con Touch ID / Face ID)
-                      </span>
-                      <span className="text-[11px] text-stone-500">
-                        Consente donazioni immediate con 1 tocco da dispositivi Apple e browser compatibili
-                      </span>
-                    </div>
-                  </div>
-                  <label className="flex items-center gap-2 cursor-pointer bg-stone-100 px-3 py-1.5 rounded-lg border border-stone-200 hover:bg-stone-200 transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={applePayEnabled}
-                      onChange={(e) => setApplePayEnabled(e.target.checked)}
-                      className="rounded text-stone-900 focus:ring-stone-800 w-4 h-4 cursor-pointer"
-                    />
-                    <span className="text-xs font-semibold text-stone-800">
-                      {applePayEnabled ? 'Attivo' : 'Disattivato'}
-                    </span>
-                  </label>
-                </div>
-
-                {applePayEnabled && (
-                  <div className="space-y-3 bg-stone-50 p-4 rounded-xl border border-stone-200 animate-in fade-in duration-200">
-                    <div>
-                      <label className="block text-[11px] font-semibold text-stone-800 mb-1">
-                        Numero di Telefono o Apple ID per accredito Wallet sposi *
-                      </label>
-                      <input
-                        type="text"
-                        value={applePayRecipient}
-                        onChange={(e) => setApplePayRecipient(e.target.value)}
-                        placeholder="+39 340 1234567 oppure sposi@icloud.com"
-                        className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-stone-900 text-xs focus:outline-none focus:ring-1 focus:ring-stone-900 font-mono"
-                      />
-                      <span className="text-[10px] text-stone-500 mt-1 block">
-                        I fondi inviati tramite Apple Pay vengono accreditati direttamente sul Wallet/carta collegata degli sposi.
-                      </span>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-semibold text-stone-800 mb-1">
-                        Istruzioni o Nota di Conferma per Apple Pay
-                      </label>
-                      <input
-                        type="text"
-                        value={applePayNote}
-                        onChange={(e) => setApplePayNote(e.target.value)}
-                        placeholder="Accredito istantaneo tramite Apple Pay / Wallet sposi"
-                        className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-stone-900 text-xs focus:outline-none focus:ring-1 focus:ring-stone-900"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
 
               <div className="pt-2 flex items-center justify-between">
                 {isSaved ? (

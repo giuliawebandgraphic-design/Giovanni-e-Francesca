@@ -15,9 +15,6 @@ export const INITIAL_SETTINGS: RegistrySettings = {
   bankName: 'Intesa Sanpaolo - Filiale Verona Centro',
   bankBic: 'BCITITMM',
   heroImage: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80',
-  applePayEnabled: true,
-  applePayRecipient: '+39 340 8899123',
-  applePayNote: 'Accredito istantaneo su Apple Pay / Apple Wallet degli sposi',
 };
 
 // Default state: 2 demo gifts visible so couples can review and customize
