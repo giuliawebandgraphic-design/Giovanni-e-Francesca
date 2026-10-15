@@ -8,6 +8,8 @@ export const WishlistManager: React.FC = () => {
   const { gifts, settings, deleteGift, updateGift, loadDemoGifts, setActiveView } = useRegistry();
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [giftToEdit, setGiftToEdit] = useState<GiftItem | null>(null);
+  const [giftToDelete, setGiftToDelete] = useState<GiftItem | null>(null);
+  const [confirmReloadDemo, setConfirmReloadDemo] = useState<boolean>(false);
 
   const handleOpenAdd = () => {
     setGiftToEdit(null);
@@ -42,7 +44,13 @@ export const WishlistManager: React.FC = () => {
         <div className="flex items-center gap-2 sm:gap-3">
           <button
             type="button"
-            onClick={() => loadDemoGifts()}
+            onClick={() => {
+              if (gifts.length > 0) {
+                setConfirmReloadDemo(true);
+              } else {
+                loadDemoGifts();
+              }
+            }}
             className="flex items-center gap-1.5 py-2 px-3 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-xl border border-stone-200 transition-colors cursor-pointer"
             title="Ripristina i 2 prodotti demo nella wishlist"
           >
@@ -136,11 +144,7 @@ export const WishlistManager: React.FC = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        if (confirm(`Eliminare il regalo "${gift.title}"?`)) {
-                          deleteGift(gift.id);
-                        }
-                      }}
+                      onClick={() => setGiftToDelete(gift)}
                       title="Elimina regalo"
                       className="p-1 text-rose-600 hover:text-rose-800 rounded cursor-pointer"
                     >
@@ -208,6 +212,88 @@ export const WishlistManager: React.FC = () => {
           giftToEdit={giftToEdit}
           onClose={() => setModalOpen(false)}
         />
+      )}
+
+      {/* Confirmation Modal: Delete Gift */}
+      {giftToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-stone-200 p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-stone-900">
+                  Eliminare questo regalo?
+                </h3>
+                <p className="text-xs text-stone-600 leading-relaxed">
+                  Stai per eliminare definitivamente <strong className="text-stone-900">"{giftToDelete.title}"</strong> dalla lista nozze.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-stone-100">
+              <button
+                type="button"
+                onClick={() => setGiftToDelete(null)}
+                className="py-2 px-4 rounded-xl text-xs font-semibold text-stone-600 hover:text-stone-900 hover:bg-stone-100 border border-stone-200 transition-colors cursor-pointer"
+              >
+                Annulla
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  deleteGift(giftToDelete.id);
+                  setGiftToDelete(null);
+                }}
+                className="py-2 px-4 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-xs transition-colors cursor-pointer"
+              >
+                Elimina Regalo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal: Reload Demo Gifts */}
+      {confirmReloadDemo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-stone-200 p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#BCBF97]/20 text-[#636842] flex items-center justify-center shrink-0">
+                <Gift className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-stone-900">
+                  Ricaricare i 2 regali di prova?
+                </h3>
+                <p className="text-xs text-stone-600 leading-relaxed">
+                  Questa azione ripristinerà i 2 regali di esempio demo, sovrascrivendo la lista attuale.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-stone-100">
+              <button
+                type="button"
+                onClick={() => setConfirmReloadDemo(false)}
+                className="py-2 px-4 rounded-xl text-xs font-semibold text-stone-600 hover:text-stone-900 hover:bg-stone-100 border border-stone-200 transition-colors cursor-pointer"
+              >
+                Annulla
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  loadDemoGifts();
+                  setConfirmReloadDemo(false);
+                }}
+                className="py-2 px-4 rounded-xl text-xs font-bold text-white bg-[#636842] hover:bg-[#525636] shadow-xs transition-colors cursor-pointer"
+              >
+                Conferma e Ricarica
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

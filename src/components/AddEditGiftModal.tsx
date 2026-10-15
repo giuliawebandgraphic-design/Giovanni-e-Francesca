@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { GiftItem, GiftCategory } from '../types';
 import { useRegistry } from '../context/RegistryContext';
+import { compressImage } from '../utils/imageCompressor';
 import {
   X,
   Sparkles,
@@ -8,6 +9,7 @@ import {
   Star,
   Eye,
   Check,
+  Loader2,
 } from 'lucide-react';
 
 interface AddEditGiftModalProps {
@@ -41,8 +43,9 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
   const [isPriority, setIsPriority] = useState<boolean>(giftToEdit?.isPriority || false);
   const [imageTab, setImageTab] = useState<'upload' | 'preset' | 'url'>('upload');
   const [uploadError, setUploadError] = useState<string>('');
+  const [isCompressing, setIsCompressing] = useState<boolean>(false);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -51,20 +54,17 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
       return;
     }
 
-    if (file.size > 8 * 1024 * 1024) {
-      setUploadError("L'immagine è troppo pesante (massimo 8MB).");
-      return;
-    }
-
     setUploadError('');
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      if (dataUrl) {
-        setImageUrl(dataUrl);
-      }
-    };
-    reader.readAsDataURL(file);
+    setIsCompressing(true);
+    try {
+      // Compresses to optimal 3:4 aspect vertical image (25KB - 40KB)
+      const compressedDataUrl = await compressImage(file, 750, 1000, 0.75);
+      setImageUrl(compressedDataUrl);
+    } catch {
+      setUploadError("Impossibile elaborare l'immagine. Riprova con un altro file.");
+    } finally {
+      setIsCompressing(false);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -187,17 +187,25 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
                 {imageTab === 'upload' && (
                   <div className="space-y-2">
                     <div
-                      onClick={() => fileInputRef.current?.click()}
-                      className="border-2 border-dashed border-stone-300 hover:border-[#636842] bg-stone-50 hover:bg-[#BCBF97]/15 rounded-xl p-4 text-center cursor-pointer transition-colors"
+                      onClick={() => !isCompressing && fileInputRef.current?.click()}
+                      className={`border-2 border-dashed rounded-xl p-4 text-center transition-colors ${
+                        isCompressing
+                          ? 'border-[#636842] bg-[#BCBF97]/20 cursor-wait'
+                          : 'border-stone-300 hover:border-[#636842] bg-stone-50 hover:bg-[#BCBF97]/15 cursor-pointer'
+                      }`}
                     >
                       <div className="w-9 h-9 mx-auto rounded-full bg-white border border-stone-200 flex items-center justify-center text-[#636842] shadow-2xs mb-1.5">
-                        <Upload className="w-4 h-4" />
+                        {isCompressing ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-[#636842]" />
+                        ) : (
+                          <Upload className="w-4 h-4" />
+                        )}
                       </div>
                       <span className="text-xs font-bold text-stone-900 block">
-                        Carica foto dal computer o smartphone
+                        {isCompressing ? 'Ottimizzazione immagine in corso...' : 'Carica foto dal computer o smartphone'}
                       </span>
                       <span className="text-[11px] text-stone-500 block mt-0.5">
-                        JPG, PNG, WebP (fino a 8MB)
+                        {isCompressing ? 'Riduzione e compressione automatica...' : 'JPG, PNG, WebP (ottimizzazione automatica)'}
                       </span>
                     </div>
 

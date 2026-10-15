@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useRegistry } from '../context/RegistryContext';
+import { compressImage } from '../utils/imageCompressor';
 import {
   Upload,
   Link as LinkIcon,
@@ -9,6 +10,7 @@ import {
   Eye,
   Sparkles,
   Info,
+  Loader2,
 } from 'lucide-react';
 
 const PRESET_IMAGES = [
@@ -72,7 +74,7 @@ export const HomeImageManager: React.FC = () => {
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -81,22 +83,15 @@ export const HomeImageManager: React.FC = () => {
       return;
     }
 
-    // Limit client base64 to ~5MB
-    if (file.size > 6 * 1024 * 1024) {
-      setUrlError("L'immagine è troppo grande (massimo 6MB). Riduci le dimensioni.");
-      return;
+    setUrlError('');
+    try {
+      // Compress hero image to max 1200x800 ~45KB
+      const compressed = await compressImage(file, 1200, 800, 0.75);
+      updateSettings({ heroImage: compressed });
+      triggerSuccess();
+    } catch {
+      setUrlError("Impossibile elaborare l'immagine. Riprova con un altro file.");
     }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      if (dataUrl) {
-        updateSettings({ heroImage: dataUrl });
-        setUrlError('');
-        triggerSuccess();
-      }
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleSelectPreset = (url: string) => {
