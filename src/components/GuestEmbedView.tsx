@@ -123,8 +123,8 @@ export const GuestEmbedView: React.FC = () => {
                   key={gift.id}
                   className="bg-white rounded-2xl border border-stone-200/90 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col group"
                 >
-                  {/* Foto del Regalo */}
-                  <div className="relative aspect-16/10 overflow-hidden bg-stone-100">
+                  {/* Foto del Regalo (Proporzione Verticale) */}
+                  <div className="relative aspect-[3/4] overflow-hidden bg-stone-100">
                     <img
                       src={gift.imageUrl}
                       alt={gift.title}

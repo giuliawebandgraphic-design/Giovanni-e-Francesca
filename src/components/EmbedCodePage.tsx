@@ -652,7 +652,7 @@ export const EmbedCodePage: React.FC = () => {
                     <div className="grid grid-cols-2 gap-2 text-left">
                       {gifts.slice(0, 2).map((g) => (
                         <div key={g.id} className="bg-white p-2 rounded-lg border border-stone-200 text-[10px]">
-                          <img src={g.imageUrl} alt={g.title} className="w-full h-12 object-cover rounded mb-1" />
+                          <img src={g.imageUrl} alt={g.title} className="w-full aspect-[3/4] object-cover rounded mb-1" />
                           <span className="font-bold line-clamp-1 text-stone-900">{g.title}</span>
                           <span className="text-stone-500 block">Quota libera · PayPal</span>
                         </div>

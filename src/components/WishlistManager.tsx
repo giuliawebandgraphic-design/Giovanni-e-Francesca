@@ -94,8 +94,8 @@ export const WishlistManager: React.FC = () => {
               className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-2xs hover:shadow-xs transition-shadow flex flex-col justify-between"
             >
               <div>
-                {/* Image and badges */}
-                <div className="relative aspect-16/9 overflow-hidden bg-stone-100">
+                {/* Image and badges (vertical aspect ratio) */}
+                <div className="relative aspect-[3/4] overflow-hidden bg-stone-100">
                   <img
                     src={gift.imageUrl}
                     alt={gift.title}

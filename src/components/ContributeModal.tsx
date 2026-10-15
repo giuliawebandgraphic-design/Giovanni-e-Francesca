@@ -123,7 +123,7 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
                 <img
                   src={gift.imageUrl}
                   alt={gift.title}
-                  className="w-16 h-16 rounded-lg object-cover border border-stone-200"
+                  className="w-16 aspect-[3/4] rounded-lg object-cover border border-stone-200 shrink-0"
                   referrerPolicy="no-referrer"
                 />
                 <div className="flex-1 min-w-0">

@@ -157,8 +157,8 @@ export const GuestRegistryView: React.FC = () => {
                   key={gift.id}
                   className="group bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-md transition-all duration-200 flex flex-col"
                 >
-                  {/* Image container */}
-                  <div className="relative aspect-4/3 overflow-hidden bg-stone-100">
+                  {/* Image container (vertical aspect ratio) */}
+                  <div className="relative aspect-[3/4] overflow-hidden bg-stone-100">
                     <img
                       src={gift.imageUrl}
                       alt={gift.title}

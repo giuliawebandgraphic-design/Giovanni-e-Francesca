@@ -215,7 +215,7 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
                         key={preset.url}
                         type="button"
                         onClick={() => setImageUrl(preset.url)}
-                        className={`aspect-4/3 rounded-lg overflow-hidden border-2 transition-all cursor-pointer relative ${
+                        className={`aspect-[3/4] rounded-lg overflow-hidden border-2 transition-all cursor-pointer relative ${
                           imageUrl === preset.url ? 'border-[#636842] ring-2 ring-[#BCBF97]/50' : 'border-transparent opacity-75 hover:opacity-100'
                         }`}
                         title={preset.label}
@@ -253,7 +253,7 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
                 </div>
 
                 <div className="bg-white rounded-xl border border-stone-200 overflow-hidden shadow-2xs">
-                  <div className="relative aspect-16/9 bg-stone-100 overflow-hidden">
+                  <div className="relative aspect-[3/4] bg-stone-100 overflow-hidden">
                     <img
                       src={imageUrl || PRESET_IMAGES[0].url}
                       alt={title || 'Anteprima'}
