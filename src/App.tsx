@@ -84,13 +84,6 @@ const MainContent: React.FC = () => {
 
           <div className="flex flex-wrap items-center gap-3 text-xs">
             <button
-              onClick={() => setActiveView('guest_registry')}
-              className="hover:text-[#636842] transition-colors cursor-pointer"
-            >
-              Vista Invitati
-            </button>
-            <span className="text-stone-300">·</span>
-            <button
               onClick={() => setActiveView('embed_view')}
               className="hover:text-[#636842] transition-colors cursor-pointer font-semibold text-[#636842]"
             >
@@ -105,17 +98,24 @@ const MainContent: React.FC = () => {
             </button>
             <span className="text-stone-300">·</span>
             <button
+              onClick={() => setActiveView('organizer_gifts')}
+              className="hover:text-[#636842] transition-colors cursor-pointer"
+            >
+              Gestisci Lista
+            </button>
+            <span className="text-stone-300">·</span>
+            <button
+              onClick={() => setActiveView('organizer_paypal')}
+              className="hover:text-[#636842] transition-colors cursor-pointer"
+            >
+              Pagamenti
+            </button>
+            <span className="text-stone-300">·</span>
+            <button
               onClick={() => setActiveView('organizer_thanks')}
               className="hover:text-[#636842] transition-colors cursor-pointer"
             >
               Ringraziamenti
-            </button>
-            <span className="text-stone-300">·</span>
-            <button
-              onClick={() => setActiveView('organizer_stats')}
-              className="hover:text-[#636842] transition-colors cursor-pointer"
-            >
-              Statistiche
             </button>
             <span className="text-stone-300">·</span>
             <button

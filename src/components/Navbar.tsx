@@ -66,10 +66,10 @@ export const Navbar: React.FC = () => {
             ) : (
               <button
                 type="button"
-                onClick={() => setActiveView('guest_registry')}
+                onClick={() => setActiveView('embed_view')}
                 className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-stone-100 text-stone-800 border border-stone-300 text-xs font-semibold rounded-xl shadow-2xs transition-colors cursor-pointer"
               >
-                <span>Vista Invitati</span>
+                <span>Anteprima Lista</span>
               </button>
             )}
 

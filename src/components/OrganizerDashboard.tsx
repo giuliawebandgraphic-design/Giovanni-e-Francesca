@@ -3,7 +3,6 @@ import { useRegistry } from '../context/RegistryContext';
 import {
   Heart,
   CreditCard,
-  Users,
   Gift,
   ArrowRight,
   TrendingUp,
@@ -78,10 +77,10 @@ export const OrganizerDashboard: React.FC = () => {
             </button>
 
             <button
-              onClick={() => setActiveView('guest_registry')}
+              onClick={() => setActiveView('embed_view')}
               className="flex items-center gap-2 py-2 px-3.5 bg-[#636842] hover:bg-[#525636] text-white text-xs font-semibold rounded-xl shadow-2xs transition-all cursor-pointer"
             >
-              <span>Anteprima Invitati</span>
+              <span>Anteprima Lista Nozze</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -89,7 +88,7 @@ export const OrganizerDashboard: React.FC = () => {
       </div>
 
       {/* Primary KPI Cards with #FFE68A, #A6C1D8, and #BCBF97 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Total Raised */}
         <div className="p-5 bg-gradient-to-br from-white to-[#FFE68A]/20 rounded-2xl border-2 border-[#FFE68A] shadow-xs space-y-2">
           <div className="flex items-center justify-between">
@@ -136,32 +135,6 @@ export const OrganizerDashboard: React.FC = () => {
           </p>
           <span className="text-[11px] text-slate-800 font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
             Gestisci conto PayPal <ChevronRight className="w-3.5 h-3.5" />
-          </span>
-        </div>
-
-        {/* Guests & Attendance */}
-        <div
-          onClick={() => setActiveView('organizer_guests')}
-          className="p-5 bg-gradient-to-br from-white to-[#BCBF97]/25 hover:to-[#BCBF97]/40 transition-all cursor-pointer rounded-2xl border-2 border-[#BCBF97] shadow-xs space-y-2 group"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] uppercase tracking-wider text-stone-700 font-bold">
-              Invitati Donatori
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-[#BCBF97] flex items-center justify-center text-stone-800 shadow-2xs">
-              <Users className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-3xl font-bold text-stone-900 tabular-nums">
-            {guests.filter((g) => g.totalDonated > 0).length} / {guests.length}
-          </div>
-          <p className="text-[11px] text-stone-600">
-            {guests.length > 0
-              ? `${Math.round((guests.filter((g) => g.totalDonated > 0).length / guests.length) * 100)}% degli invitati ha partecipato`
-              : 'Nessun invitato registrato'}
-          </p>
-          <span className="text-[11px] text-stone-800 font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-            Apri schede invitati <ChevronRight className="w-3.5 h-3.5" />
           </span>
         </div>
 
@@ -248,10 +221,10 @@ export const OrganizerDashboard: React.FC = () => {
             </div>
             {donations.length > 0 && (
               <button
-                onClick={() => setActiveView('organizer_guests')}
+                onClick={() => setActiveView('organizer_thanks')}
                 className="text-xs text-[#636842] hover:underline font-bold flex items-center gap-1 cursor-pointer"
               >
-                Vedi tutte ({donations.length}) <ChevronRight className="w-3.5 h-3.5" />
+                Gestisci ringraziamenti ({donations.length}) <ChevronRight className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
@@ -291,9 +264,7 @@ export const OrganizerDashboard: React.FC = () => {
                 return (
                   <div
                     key={don.id}
-                    onClick={() => {
-                      if (guest) setSelectedGuestIdForDrawer(guest.id);
-                    }}
+                    onClick={() => setActiveView('organizer_thanks')}
                     className="py-3.5 px-2 hover:bg-stone-50 rounded-xl transition-colors cursor-pointer flex items-center justify-between gap-4"
                   >
                     <div className="flex items-center gap-3">
@@ -400,17 +371,6 @@ export const OrganizerDashboard: React.FC = () => {
                 <ChevronRight className="w-3.5 h-3.5 text-stone-400 group-hover:text-stone-800" />
               </button>
 
-              {/* Statistiche */}
-              <button
-                onClick={() => setActiveView('organizer_stats')}
-                className="w-full py-2.5 px-3 bg-stone-50 hover:bg-stone-100 border border-transparent hover:border-stone-300 rounded-xl text-stone-800 font-medium text-left flex items-center justify-between transition-all cursor-pointer group"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-stone-700"></span>
-                  <span className="font-semibold">Statistiche & Analisi</span>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 text-stone-400 group-hover:text-stone-800" />
-              </button>
 
               {/* Codice per il Sito */}
               <button

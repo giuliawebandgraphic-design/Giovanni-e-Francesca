@@ -113,22 +113,8 @@ export const SidebarDrawer: React.FC = () => {
           {/* Section: Vista Pubblica & Embed */}
           <div className="space-y-1">
             <span className="text-[10px] uppercase tracking-wider text-[#636842] font-bold px-3 block mb-1">
-              Viste per gli Invitati
+              Anteprima per gli Invitati
             </span>
-            <button
-              type="button"
-              onClick={() => handleNavigate('guest_registry')}
-              className={`w-full text-left p-3.5 rounded-xl transition-all cursor-pointer ${
-                activeView === 'guest_registry'
-                  ? 'bg-[#636842] text-white shadow-sm'
-                  : 'text-stone-800 hover:bg-stone-100 hover:text-stone-950'
-              }`}
-            >
-              <div className="text-sm font-semibold">Lista Regali Completa</div>
-              <div className={`text-xs mt-0.5 ${activeView === 'guest_registry' ? 'text-stone-200' : 'text-stone-500'}`}>
-                Con navigazione e cambio vista
-              </div>
-            </button>
 
             {/* Vista Dedicata Solo Iframe */}
             <button
@@ -143,9 +129,9 @@ export const SidebarDrawer: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div className="text-sm font-bold text-stone-900">
                   {activeView === 'embed_view' ? (
-                    <span className="text-white">Pagina Solo Lista (Per Iframe)</span>
+                    <span className="text-white">Pagina Lista Nozze (Per Iframe)</span>
                   ) : (
-                    <span>Pagina Solo Lista (Per Iframe)</span>
+                    <span>Pagina Lista Nozze (Per Iframe)</span>
                   )}
                 </div>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -155,7 +141,7 @@ export const SidebarDrawer: React.FC = () => {
                 </span>
               </div>
               <div className={`text-xs mt-0.5 ${activeView === 'embed_view' ? 'text-stone-200' : 'text-stone-600'}`}>
-                Solo messaggio degli sposi e lista desideri
+                Visualizzazione pulita da incorporare nel sito degli sposi
               </div>
             </button>
           </div>
@@ -237,38 +223,6 @@ export const SidebarDrawer: React.FC = () => {
               </div>
               <div className={`text-xs mt-0.5 ${activeView === 'organizer_thanks' ? 'text-stone-200' : 'text-stone-500'}`}>
                 WhatsApp, Email e dediche personalizzate
-              </div>
-            </button>
-
-            {/* 4. Statistiche */}
-            <button
-              type="button"
-              onClick={() => handleNavigate('organizer_stats')}
-              className={`w-full text-left p-3.5 rounded-xl transition-all cursor-pointer ${
-                activeView === 'organizer_stats'
-                  ? 'bg-[#636842] text-white shadow-sm'
-                  : 'text-stone-800 hover:bg-stone-100 hover:text-stone-950'
-              }`}
-            >
-              <div className="text-sm font-semibold">Statistiche</div>
-              <div className={`text-xs mt-0.5 ${activeView === 'organizer_stats' ? 'text-stone-200' : 'text-stone-500'}`}>
-                Canali, andamento e preferenze regali
-              </div>
-            </button>
-
-            {/* Rubrica Invitati */}
-            <button
-              type="button"
-              onClick={() => handleNavigate('organizer_guests')}
-              className={`w-full text-left p-3.5 rounded-xl transition-all cursor-pointer ${
-                activeView === 'organizer_guests'
-                  ? 'bg-[#636842] text-white shadow-sm'
-                  : 'text-stone-800 hover:bg-stone-100 hover:text-stone-950'
-              }`}
-            >
-              <div className="text-sm font-semibold">Rubrica Invitati & Donazioni</div>
-              <div className={`text-xs mt-0.5 ${activeView === 'organizer_guests' ? 'text-stone-200' : 'text-stone-500'}`}>
-                {guests.length} invitati · schede profilo
               </div>
             </button>
           </div>
