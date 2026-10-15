@@ -2,11 +2,25 @@ import React, { useState } from 'react';
 import { useRegistry } from '../context/RegistryContext';
 import { GiftItem, GiftCategory } from '../types';
 import { AddEditGiftModal } from './AddEditGiftModal';
-import { Plus, Edit2, Trash2, CheckCircle2, Star, Gift, Filter, ArrowUpRight } from 'lucide-react';
+import { ReorderGiftsModal } from './ReorderGiftsModal';
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  CheckCircle2,
+  Star,
+  Gift,
+  Filter,
+  ArrowUpRight,
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 
 export const WishlistManager: React.FC = () => {
-  const { gifts, settings, deleteGift, updateGift, loadDemoGifts, setActiveView } = useRegistry();
+  const { gifts, settings, deleteGift, updateGift, moveGift, loadDemoGifts, setActiveView } = useRegistry();
   const [modalOpen, setModalOpen] = useState<boolean>(false);
+  const [reorderModalOpen, setReorderModalOpen] = useState<boolean>(false);
   const [giftToEdit, setGiftToEdit] = useState<GiftItem | null>(null);
   const [giftToDelete, setGiftToDelete] = useState<GiftItem | null>(null);
   const [confirmReloadDemo, setConfirmReloadDemo] = useState<boolean>(false);
@@ -37,11 +51,26 @@ export const WishlistManager: React.FC = () => {
             Gestione Wishlist & Quote
           </h2>
           <p className="text-xs text-stone-600 mt-1">
-            Configura i regali, imposta le quote desiderate e controlla in tempo reale lo stato di avanzamento.
+            Configura i regali, imposta le quote desiderate, modifica l'ordine di visualizzazione e controlla l'avanzamento.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            disabled={gifts.length < 2}
+            onClick={() => setReorderModalOpen(true)}
+            className={`flex items-center gap-1.5 py-2 px-3 text-xs font-semibold rounded-xl border transition-colors ${
+              gifts.length < 2
+                ? 'bg-stone-50 text-stone-400 border-stone-200 cursor-not-allowed'
+                : 'bg-white hover:bg-stone-100 text-stone-800 border-stone-200 shadow-2xs cursor-pointer'
+            }`}
+            title="Modifica l'ordine dei regali nella lista nozze con trascinamento o frecce"
+          >
+            <ArrowUpDown className="w-3.5 h-3.5 text-[#636842]" />
+            <span>Modifica Ordine</span>
+          </button>
+
           <button
             type="button"
             onClick={() => {
@@ -90,7 +119,7 @@ export const WishlistManager: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {gifts.map((gift) => {
+          {gifts.map((gift, index) => {
           const isCompleted = gift.status === 'completed';
           const percent = gift.isInfiniteQuota
             ? 100
@@ -110,7 +139,10 @@ export const WishlistManager: React.FC = () => {
                     className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"
                   />
-                  <div className="absolute top-2 left-2 flex items-center gap-1.5">
+                  <div className="absolute top-2 left-2 flex items-center gap-1.5 flex-wrap">
+                    <span className="bg-stone-900/85 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs">
+                      #{index + 1}
+                    </span>
                     {gift.isPriority && (
                       <span className="bg-[#636842] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs">
                         Speciale
@@ -200,6 +232,53 @@ export const WishlistManager: React.FC = () => {
                     Modifica
                   </button>
                 </div>
+
+                {/* Quick Reorder Controls */}
+                <div className="pt-2 border-t border-stone-100 flex items-center justify-between text-xs text-stone-600">
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] uppercase font-bold text-stone-400 mr-0.5">Ordine:</span>
+                    <button
+                      type="button"
+                      disabled={index === 0}
+                      onClick={() => moveGift(gift.id, 'up')}
+                      title={index === 0 ? 'È già il primo elemento' : 'Sposta prima (←)'}
+                      className={`p-1 rounded-md border flex items-center gap-0.5 transition-colors ${
+                        index === 0
+                          ? 'text-stone-300 border-stone-100 bg-stone-50 cursor-not-allowed'
+                          : 'text-stone-700 border-stone-200 hover:bg-stone-100 hover:text-stone-900 cursor-pointer bg-white shadow-2xs'
+                      }`}
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-semibold">Prima</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={index === gifts.length - 1}
+                      onClick={() => moveGift(gift.id, 'down')}
+                      title={index === gifts.length - 1 ? "È già l'ultimo elemento" : 'Sposta dopo (→)'}
+                      className={`p-1 rounded-md border flex items-center gap-0.5 transition-colors ${
+                        index === gifts.length - 1
+                          ? 'text-stone-300 border-stone-100 bg-stone-50 cursor-not-allowed'
+                          : 'text-stone-700 border-stone-200 hover:bg-stone-100 hover:text-stone-900 cursor-pointer bg-white shadow-2xs'
+                      }`}
+                    >
+                      <span className="text-[10px] font-semibold">Dopo</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {gifts.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setReorderModalOpen(true)}
+                      className="text-[11px] text-[#636842] hover:text-[#525636] font-semibold hover:underline cursor-pointer flex items-center gap-1"
+                      title="Apri pannello per riordinare tutti i regali con trascinamento"
+                    >
+                      <ArrowUpDown className="w-3 h-3" />
+                      <span>Riordina</span>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           );
@@ -211,6 +290,12 @@ export const WishlistManager: React.FC = () => {
         <AddEditGiftModal
           giftToEdit={giftToEdit}
           onClose={() => setModalOpen(false)}
+        />
+      )}
+
+      {reorderModalOpen && (
+        <ReorderGiftsModal
+          onClose={() => setReorderModalOpen(false)}
         />
       )}
 

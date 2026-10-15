@@ -46,6 +46,9 @@ interface RegistryContextType {
   addGift: (gift: Omit<GiftItem, 'id' | 'raisedAmount' | 'contributionsCount' | 'createdAt'>) => void;
   updateGift: (id: string, updates: Partial<GiftItem>) => void;
   deleteGift: (id: string) => void;
+  moveGift: (id: string, direction: 'up' | 'down') => void;
+  moveGiftToPosition: (id: string, targetIndex: number) => void;
+  reorderGifts: (newGifts: GiftItem[]) => void;
   
   addGuest: (guest: Omit<Guest, 'id' | 'totalDonated' | 'donationsCount' | 'thankYouSent' | 'avatarColor'>) => Guest;
   updateGuest: (id: string, updates: Partial<Guest>) => void;
@@ -533,6 +536,36 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setGifts((prev) => prev.filter((g) => g.id !== id));
   };
 
+  const moveGift = (id: string, direction: 'up' | 'down') => {
+    setGifts((prev) => {
+      const index = prev.findIndex((g) => g.id === id);
+      if (index === -1) return prev;
+      const targetIndex = direction === 'up' ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= prev.length) return prev;
+      const updated = [...prev];
+      const [item] = updated.splice(index, 1);
+      updated.splice(targetIndex, 0, item);
+      return updated;
+    });
+  };
+
+  const moveGiftToPosition = (id: string, targetIndex: number) => {
+    setGifts((prev) => {
+      const currentIndex = prev.findIndex((g) => g.id === id);
+      if (currentIndex === -1) return prev;
+      const clampedIndex = Math.max(0, Math.min(targetIndex, prev.length - 1));
+      if (currentIndex === clampedIndex) return prev;
+      const updated = [...prev];
+      const [item] = updated.splice(currentIndex, 1);
+      updated.splice(clampedIndex, 0, item);
+      return updated;
+    });
+  };
+
+  const reorderGifts = (newGifts: GiftItem[]) => {
+    setGifts(newGifts);
+  };
+
   const addGuest = (guestData: Omit<Guest, 'id' | 'totalDonated' | 'donationsCount' | 'thankYouSent' | 'avatarColor'>) => {
     const randomColor = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
     const newGuest: Guest = {
@@ -669,6 +702,9 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         addGift,
         updateGift,
         deleteGift,
+        moveGift,
+        moveGiftToPosition,
+        reorderGifts,
         addGuest,
         updateGuest,
         deleteGuest,
