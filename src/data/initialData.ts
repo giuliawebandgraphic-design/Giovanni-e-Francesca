@@ -3,7 +3,6 @@ import { GiftItem, Guest, Donation, RegistrySettings } from '../types';
 export const INITIAL_SETTINGS: RegistrySettings = {
   coupleNames: 'Giovanni & Francesca',
   eventTitle: 'Il nostro Matrimonio',
-  eventDate: '2026-07-19',
   eventLocation: 'Villa Cordevigo Wine Relais, Cavaion Veronese (VR)',
   welcomeMessage:
     'La vostra presenza è per noi il dono più prezioso. Se desiderate accompagnarci nel realizzare i nostri sogni per la nuova vita insieme o contribuire al nostro viaggio di nozze, qui potete inserire la vostra quota libera con versamento diretto su PayPal o bonifico bancario.',

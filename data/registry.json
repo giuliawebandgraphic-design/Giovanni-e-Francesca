@@ -1,23 +1,19 @@
 {
-  "version": 1679,
-  "lastModified": 1792057227178,
+  "version": 1,
+  "lastModified": 1792069338917,
   "settings": {
-    "heroImage": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80",
-    "paypalEmail": "giovanni.francesca.wedding@gmail.com",
-    "bankBic": "BCITITMM",
+    "coupleNames": "Giovanni & Francesca",
+    "eventTitle": "Il nostro Matrimonio",
     "eventLocation": "Villa Cordevigo Wine Relais, Cavaion Veronese (VR)",
     "welcomeMessage": "La vostra presenza è per noi il dono più prezioso. Se desiderate accompagnarci nel realizzare i nostri sogni per la nuova vita insieme o contribuire al nostro viaggio di nozze, qui potete inserire la vostra quota libera con versamento diretto su PayPal o bonifico bancario.",
-    "eventTitle": "Il nostro Matrimonio",
-    "paypalMeUsername": "giovannifrancescawedding",
-    "coupleNames": "Giovanni & Francesca",
-    "bankIban": "IT60 X 05428 11101 000000124890",
-    "eventDate": "2026-07-19",
-    "bankAccountHolder": "Giovanni Rossi e Francesca Bianchi",
     "currency": "€",
+    "paypalEmail": "giovanni.francesca.wedding@gmail.com",
+    "paypalMeUsername": "giovannifrancescawedding",
+    "bankIban": "IT60 X 05428 11101 000000124890",
+    "bankAccountHolder": "Giovanni Rossi e Francesca Bianchi",
     "bankName": "Intesa Sanpaolo - Filiale Verona Centro",
-    "applePayEnabled": true,
-    "applePayRecipient": "+39 340 8899123",
-    "applePayNote": "Accredito istantaneo tramite Apple Pay / Wallet sposi"
+    "bankBic": "BCITITMM",
+    "heroImage": "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80"
   },
   "gifts": [
     {

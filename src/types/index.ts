@@ -56,7 +56,7 @@ export interface Guest {
 export interface RegistrySettings {
   coupleNames: string;
   eventTitle: string;
-  eventDate: string;
+  eventDate?: string;
   eventLocation: string;
   welcomeMessage: string;
   currency: string;

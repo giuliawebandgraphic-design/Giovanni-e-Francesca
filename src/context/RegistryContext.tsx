@@ -151,6 +151,7 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const [isFirestoreConnected, setIsFirestoreConnected] = useState<boolean>(false);
 
+  const isInitialFirestoreLoadDoneRef = React.useRef<boolean>(false);
   const isRemoteUpdatingRef = React.useRef<boolean>(false);
   const serverVersionRef = React.useRef<number>(1);
 
@@ -161,7 +162,9 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     donations?: Donation[];
     settings?: RegistrySettings;
   }) => {
-    if (isRemoteUpdatingRef.current) return;
+    // CRITICAL: Do NOT write to Firestore before initial cloud load is done,
+    // and do NOT write if this update was triggered by a remote cloud snapshot!
+    if (!isInitialFirestoreLoadDoneRef.current || isRemoteUpdatingRef.current) return;
     try {
       const sanitized = JSON.parse(JSON.stringify(payload));
       sanitized.lastUpdated = Date.now();
@@ -171,40 +174,7 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  // Function to pull latest registry from server fallback
-  const refreshRegistry = async () => {
-    try {
-      const res = await fetch('/api/registry');
-      if (!res.ok) return;
-      const data = await res.json();
-      if (data && Array.isArray(data.gifts)) {
-        isRemoteUpdatingRef.current = true;
-        serverVersionRef.current = data.version || 1;
-
-        setGifts(data.gifts);
-        if (Array.isArray(data.guests)) setGuests(data.guests);
-        if (Array.isArray(data.donations)) setDonations(data.donations);
-        if (data.settings && typeof data.settings === 'object') setSettings(data.settings);
-
-        try {
-          localStorage.setItem(STORAGE_KEYS.GIFTS, JSON.stringify(data.gifts));
-          if (data.guests) localStorage.setItem(STORAGE_KEYS.GUESTS, JSON.stringify(data.guests));
-          if (data.donations) localStorage.setItem(STORAGE_KEYS.DONATIONS, JSON.stringify(data.donations));
-          if (data.settings) localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(data.settings));
-        } catch {
-          // ignore storage error
-        }
-
-        setTimeout(() => {
-          isRemoteUpdatingRef.current = false;
-        }, 150);
-      }
-    } catch (err) {
-      console.warn('Could not fetch registry from server:', err);
-    }
-  };
-
-  // Helper to push state changes to the server
+  // Helper to push state changes to the server backup
   const pushSyncToServer = async (payload: {
     gifts?: GiftItem[];
     guests?: Guest[];
@@ -224,12 +194,75 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           serverVersionRef.current = result.version;
         }
       }
-    } catch (err) {
-      console.warn('Failed to sync changes to server:', err);
+    } catch {
+      // background backup error ignored
     }
   };
 
-  // 1. Firebase Firestore Cloud Real-Time Listener (Instant multi-device sync anywhere)
+  // Function to pull latest registry from Firestore (or server fallback if offline)
+  const refreshRegistry = async () => {
+    try {
+      const snap = await getDoc(doc(db, 'registry', 'main'));
+      if (snap.exists()) {
+        const cloudData = snap.data();
+        if (cloudData) {
+          isRemoteUpdatingRef.current = true;
+          if (Array.isArray(cloudData.gifts)) {
+            setGifts(cloudData.gifts);
+            try {
+              localStorage.setItem(STORAGE_KEYS.GIFTS, JSON.stringify(cloudData.gifts));
+            } catch {}
+          }
+          if (Array.isArray(cloudData.guests)) {
+            setGuests(cloudData.guests);
+            try {
+              localStorage.setItem(STORAGE_KEYS.GUESTS, JSON.stringify(cloudData.guests));
+            } catch {}
+          }
+          if (Array.isArray(cloudData.donations)) {
+            setDonations(cloudData.donations);
+            try {
+              localStorage.setItem(STORAGE_KEYS.DONATIONS, JSON.stringify(cloudData.donations));
+            } catch {}
+          }
+          if (cloudData.settings && typeof cloudData.settings === 'object') {
+            setSettings((prev) => ({ ...prev, ...cloudData.settings }));
+            try {
+              localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(cloudData.settings));
+            } catch {}
+          }
+          setTimeout(() => {
+            isRemoteUpdatingRef.current = false;
+          }, 100);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('Firestore direct fetch error, falling back to server:', err);
+    }
+
+    // Fallback to server API if Firestore is not reachable
+    try {
+      const res = await fetch('/api/registry');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data && Array.isArray(data.gifts)) {
+        isRemoteUpdatingRef.current = true;
+        serverVersionRef.current = data.version || 1;
+        setGifts(data.gifts);
+        if (Array.isArray(data.guests)) setGuests(data.guests);
+        if (Array.isArray(data.donations)) setDonations(data.donations);
+        if (data.settings && typeof data.settings === 'object') setSettings((prev) => ({ ...prev, ...data.settings }));
+        setTimeout(() => {
+          isRemoteUpdatingRef.current = false;
+        }, 100);
+      }
+    } catch {
+      // offline fallback
+    }
+  };
+
+  // 1. Firebase Firestore Cloud Real-Time Listener (Instant multi-device & iframe sync)
   useEffect(() => {
     testConnection().then((connected) => {
       setIsFirestoreConnected(connected);
@@ -245,19 +278,12 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           const cloudData = snapshot.data();
           if (cloudData) {
             isRemoteUpdatingRef.current = true;
+
             if (Array.isArray(cloudData.gifts)) {
-              if (cloudData.gifts.length > 0) {
-                setGifts(cloudData.gifts);
-                try {
-                  localStorage.setItem(STORAGE_KEYS.GIFTS, JSON.stringify(cloudData.gifts));
-                } catch {}
-              } else {
-                setGifts(DEMO_PRESET_GIFTS);
-                pushSyncToFirestore({ gifts: DEMO_PRESET_GIFTS });
-                try {
-                  localStorage.setItem(STORAGE_KEYS.GIFTS, JSON.stringify(DEMO_PRESET_GIFTS));
-                } catch {}
-              }
+              setGifts(cloudData.gifts);
+              try {
+                localStorage.setItem(STORAGE_KEYS.GIFTS, JSON.stringify(cloudData.gifts));
+              } catch {}
             }
             if (Array.isArray(cloudData.guests)) {
               setGuests(cloudData.guests);
@@ -272,13 +298,16 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               } catch {}
             }
             if (cloudData.settings && typeof cloudData.settings === 'object') {
-              setSettings(cloudData.settings);
+              setSettings((prev) => ({ ...prev, ...cloudData.settings }));
               try {
                 localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(cloudData.settings));
               } catch {}
             }
 
-            // Also keep local disk in sync as backup
+            // Flag that initial cloud data has been loaded: safe to accept user changes now
+            isInitialFirestoreLoadDoneRef.current = true;
+
+            // Also keep local disk backup in sync
             pushSyncToServer({
               gifts: cloudData.gifts,
               guests: cloudData.guests,
@@ -288,92 +317,37 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
             setTimeout(() => {
               isRemoteUpdatingRef.current = false;
-            }, 120);
+            }, 100);
           }
         } else {
           // Document does not exist in Firestore yet: seed initial registry
-          const initialSeed = JSON.parse(
-            JSON.stringify({
-              gifts,
-              guests,
-              donations,
-              settings,
-              lastUpdated: Date.now(),
+          const initialSeed = {
+            gifts,
+            guests,
+            donations,
+            settings,
+            lastUpdated: Date.now(),
+          };
+          setDoc(registryDoc, initialSeed, { merge: true })
+            .then(() => {
+              isInitialFirestoreLoadDoneRef.current = true;
             })
-          );
-          setDoc(registryDoc, initialSeed, { merge: true }).catch((err) => {
-            console.warn('Could not seed initial Firestore document:', err);
-          });
+            .catch((err) => {
+              console.warn('Could not seed initial Firestore document:', err);
+              isInitialFirestoreLoadDoneRef.current = true;
+            });
         }
       },
       (err) => {
         console.warn('Firestore subscription fallback:', err);
+        // Allow local edits if offline
+        isInitialFirestoreLoadDoneRef.current = true;
       }
     );
 
-    return () => {
-      unsubscribe();
-    };
-  }, []);
-
-  // 2. Initial server fetch on mount (fallback & fast boot)
-  useEffect(() => {
-    refreshRegistry();
-  }, []);
-
-  // 3. Real-time background sync fallback: SSE + polling (every 3s) + focus listener
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    // A. Server-Sent Events (SSE)
-    let eventSource: EventSource | null = null;
-    try {
-      eventSource = new EventSource('/api/registry/events');
-      eventSource.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data && data.type === 'REGISTRY_UPDATED') {
-            if (data.version && data.version > serverVersionRef.current) {
-              refreshRegistry();
-            }
-          }
-        } catch {
-          // ignore
-        }
-      };
-    } catch {
-      // EventSource fallback
-    }
-
-    // B. Fast Polling (checks lightweight version every 3s)
-    const pollInterval = setInterval(async () => {
-      try {
-        const res = await fetch('/api/registry/version');
-        if (!res.ok) return;
-        const info = await res.json();
-        if (info && info.version && info.version > serverVersionRef.current) {
-          refreshRegistry();
-        }
-      } catch {
-        // ignore network error
-      }
-    }, 3000);
-
-    // C. Refresh immediately when window/iframe gains focus or becomes visible
-    const handleFocus = () => {
-      refreshRegistry();
-    };
-
-    window.addEventListener('focus', handleFocus);
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') {
-        refreshRegistry();
-      }
-    });
-
-    // D. Cross-window BroadcastChannel listener (same origin tabs)
+    // Cross-window BroadcastChannel listener (for same origin tabs)
     let channel: BroadcastChannel | null = null;
-    if ('BroadcastChannel' in window) {
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
       channel = new BroadcastChannel('given2_live_sync');
       channel.onmessage = (event) => {
         if (!event.data || !event.data.type) return;
@@ -382,15 +356,14 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     return () => {
-      if (eventSource) eventSource.close();
-      clearInterval(pollInterval);
-      window.removeEventListener('focus', handleFocus);
+      unsubscribe();
       if (channel) channel.close();
     };
   }, []);
 
   // Sync to local storage, push to server & save to Firestore whenever state changes
   useEffect(() => {
+    if (!isInitialFirestoreLoadDoneRef.current || isRemoteUpdatingRef.current) return;
     try {
       localStorage.setItem(STORAGE_KEYS.GIFTS, JSON.stringify(gifts));
       if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
@@ -399,13 +372,12 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         channel.close();
       }
     } catch {}
-    if (!isRemoteUpdatingRef.current) {
-      pushSyncToServer({ gifts });
-      pushSyncToFirestore({ gifts });
-    }
+    pushSyncToServer({ gifts });
+    pushSyncToFirestore({ gifts });
   }, [gifts]);
 
   useEffect(() => {
+    if (!isInitialFirestoreLoadDoneRef.current || isRemoteUpdatingRef.current) return;
     try {
       localStorage.setItem(STORAGE_KEYS.GUESTS, JSON.stringify(guests));
       if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
@@ -414,13 +386,12 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         channel.close();
       }
     } catch {}
-    if (!isRemoteUpdatingRef.current) {
-      pushSyncToServer({ guests });
-      pushSyncToFirestore({ guests });
-    }
+    pushSyncToServer({ guests });
+    pushSyncToFirestore({ guests });
   }, [guests]);
 
   useEffect(() => {
+    if (!isInitialFirestoreLoadDoneRef.current || isRemoteUpdatingRef.current) return;
     try {
       localStorage.setItem(STORAGE_KEYS.DONATIONS, JSON.stringify(donations));
       if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
@@ -429,13 +400,12 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         channel.close();
       }
     } catch {}
-    if (!isRemoteUpdatingRef.current) {
-      pushSyncToServer({ donations });
-      pushSyncToFirestore({ donations });
-    }
+    pushSyncToServer({ donations });
+    pushSyncToFirestore({ donations });
   }, [donations]);
 
   useEffect(() => {
+    if (!isInitialFirestoreLoadDoneRef.current || isRemoteUpdatingRef.current) return;
     try {
       localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
       if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
@@ -444,10 +414,8 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         channel.close();
       }
     } catch {}
-    if (!isRemoteUpdatingRef.current) {
-      pushSyncToServer({ settings });
-      pushSyncToFirestore({ settings });
-    }
+    pushSyncToServer({ settings });
+    pushSyncToFirestore({ settings });
   }, [settings]);
 
   useEffect(() => {
