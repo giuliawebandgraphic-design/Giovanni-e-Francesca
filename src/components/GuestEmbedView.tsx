@@ -6,7 +6,6 @@ import { Search, Gift, ArrowRight } from 'lucide-react';
 
 export const GuestEmbedView: React.FC = () => {
   const { gifts, settings, refreshRegistry } = useRegistry();
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeGiftForContribute, setActiveGiftForContribute] = useState<GiftItem | null>(null);
 
@@ -55,52 +54,35 @@ export const GuestEmbedView: React.FC = () => {
       if (observer) observer.disconnect();
       window.removeEventListener('resize', notifyHeight);
     };
-  }, [gifts, selectedCategory, searchQuery]);
-
-  const categories = [
-    { key: 'all', label: 'Tutti i Desideri' },
-    { key: 'honeymoon', label: 'Viaggio di Nozze' },
-    { key: 'home', label: 'Casa & Arredo' },
-    { key: 'experience', label: 'Esperienze' },
-    { key: 'custom', label: 'Fondo Libero' },
-  ];
+  }, [gifts, searchQuery]);
 
   const filteredGifts = gifts.filter((gift) => {
-    const matchesCategory = selectedCategory === 'all' || gift.category === selectedCategory;
     const matchesSearch =
       gift.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       gift.subtitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
       gift.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return matchesSearch;
   });
 
   return (
     <div className="w-full bg-transparent text-stone-900 font-sans pb-4 selection:bg-[#BCBF97]/40">
-      {/* 1. Barra Filtri Categoria e Ricerca Desideri */}
+      {/* 1. Barra Ricerca Desideri */}
       <div className="max-w-6xl mx-auto px-2 sm:px-4 pt-1 pb-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-200/80">
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-            {categories.map((cat) => (
-              <button
-                key={cat.key}
-                type="button"
-                onClick={() => setSelectedCategory(cat.key)}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
-                  selectedCategory === cat.key
-                    ? 'bg-[#636842] text-white shadow-2xs'
-                    : 'bg-white text-stone-600 hover:text-stone-900 hover:bg-stone-100 border border-stone-200'
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
+          <div>
+            <h3 className="font-editorial text-xl font-bold text-stone-900">
+              I Nostri Desideri
+            </h3>
+            <p className="text-xs text-stone-500">
+              Partecipa con un contributo libero
+            </p>
           </div>
 
-          <div className="relative w-full sm:w-60">
+          <div className="relative w-full sm:w-64">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
             <input
               type="text"
-              placeholder="Cerca desiderio..."
+              placeholder="Cerca regalo..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-3.5 py-1.5 text-xs bg-white border border-stone-300 rounded-xl text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#BCBF97]"
@@ -118,7 +100,6 @@ export const GuestEmbedView: React.FC = () => {
             <button
               type="button"
               onClick={() => {
-                setSelectedCategory('all');
                 setSearchQuery('');
               }}
               className="px-4 py-2 bg-[#636842] text-white text-xs font-semibold rounded-xl hover:bg-[#525636] transition-colors cursor-pointer"
@@ -167,9 +148,6 @@ export const GuestEmbedView: React.FC = () => {
                   {/* Dettagli del Desiderio */}
                   <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                     <div className="space-y-1.5">
-                      <span className="text-[10px] uppercase font-bold tracking-wider text-[#636842]">
-                        {categories.find((c) => c.key === gift.category)?.label || gift.category}
-                      </span>
                       <h3 className="font-editorial text-lg font-semibold text-stone-900 leading-snug line-clamp-1">
                         {gift.title}
                       </h3>

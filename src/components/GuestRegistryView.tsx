@@ -6,25 +6,15 @@ import { Heart, Search, Check, Sparkles, MapPin, Calendar, ShieldCheck, ArrowRig
 
 export const GuestRegistryView: React.FC = () => {
   const { gifts, settings, totalRaised, totalTarget, setActiveView } = useRegistry();
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeGiftForContribute, setActiveGiftForContribute] = useState<GiftItem | null>(null);
 
-  const categories: { key: string; label: string }[] = [
-    { key: 'all', label: 'Tutti i Desideri' },
-    { key: 'honeymoon', label: 'Viaggio di Nozze' },
-    { key: 'home', label: 'Casa & Design' },
-    { key: 'experience', label: 'Esperienze' },
-    { key: 'custom', label: 'Fondo Libero' },
-  ];
-
   const filteredGifts = gifts.filter((gift) => {
-    const matchesCategory = selectedCategory === 'all' || gift.category === selectedCategory;
     const matchesSearch =
       gift.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       gift.subtitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
       gift.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return matchesSearch;
   });
 
   const percentOverall = totalTarget > 0 ? Math.min(100, Math.round((totalRaised / totalTarget) * 100)) : 0;
@@ -94,36 +84,27 @@ export const GuestRegistryView: React.FC = () => {
         </div>
       </section>
 
-      {/* 2. Interactive Filter & Search Bar */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-stone-200">
-          {/* Interactive filter tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 md:pb-0">
-            {categories.map((cat) => (
-              <button
-                key={cat.key}
-                type="button"
-                onClick={() => setSelectedCategory(cat.key)}
-                className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
-                  selectedCategory === cat.key
-                    ? 'bg-[#636842] text-white shadow-xs'
-                    : 'bg-white text-stone-600 hover:text-stone-900 hover:bg-stone-100 border border-stone-200'
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
+      {/* 2. Search & Desires Header */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-stone-200">
+          <div>
+            <h3 className="font-editorial text-2xl font-bold text-stone-900">
+              I Desideri degli Sposi
+            </h3>
+            <p className="text-xs text-stone-500 mt-0.5">
+              Partecipa con un contributo libero al regalo che preferisci
+            </p>
           </div>
 
           {/* Search bar */}
-          <div className="relative w-full md:w-72">
+          <div className="relative w-full sm:w-72">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
             <input
               type="text"
-              placeholder="Cerca regalo o esperienza..."
+              placeholder="Cerca nella lista regali..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3.5 py-1.5 text-xs bg-white border border-stone-200 rounded-lg text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-[#BCBF97]"
+              className="w-full pl-9 pr-3.5 py-2 text-xs bg-white border border-stone-200 rounded-xl text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-[#BCBF97]"
             />
           </div>
         </div>
@@ -165,7 +146,6 @@ export const GuestRegistryView: React.FC = () => {
             <p className="text-stone-600 text-sm font-medium">Nessun regalo trovato per questo filtro.</p>
             <button
               onClick={() => {
-                setSelectedCategory('all');
                 setSearchQuery('');
               }}
               className="mt-3 text-xs text-[#636842] hover:underline font-bold cursor-pointer"
@@ -212,16 +192,6 @@ export const GuestRegistryView: React.FC = () => {
                   <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2 text-[11px] text-stone-400 font-medium">
-                        <span className="uppercase tracking-wider">
-                          {gift.category === 'honeymoon'
-                            ? 'Luna di Miele'
-                            : gift.category === 'home'
-                            ? 'Casa & Arredo'
-                            : gift.category === 'experience'
-                            ? 'Esperienza'
-                            : 'Fondo Libero'}
-                        </span>
-                        <span aria-hidden="true">·</span>
                         <span>{gift.contributionsCount} {gift.contributionsCount === 1 ? 'quota versata' : 'quote versate'}</span>
                       </div>
 
