@@ -25,29 +25,62 @@ export const PayPalPayoutSettings: React.FC = () => {
     getPayPalLink,
   } = useRegistry();
 
-  const [paypalEmail, setPaypalEmail] = useState<string>(settings.paypalEmail);
-  const [paypalMeUsername, setPaypalMeUsername] = useState<string>(settings.paypalMeUsername);
-  const [bankIban, setBankIban] = useState<string>(settings.bankIban);
-  const [bankAccountHolder, setBankAccountHolder] = useState<string>(settings.bankAccountHolder);
-  const [bankName, setBankName] = useState<string>(settings.bankName);
+  const [paypalEmail, setPaypalEmail] = useState<string>(settings.paypalEmail || '');
+  const [paypalMeUsername, setPaypalMeUsername] = useState<string>(settings.paypalMeUsername || '');
+  const [bankIban, setBankIban] = useState<string>(settings.bankIban || '');
+  const [bankAccountHolder, setBankAccountHolder] = useState<string>(settings.bankAccountHolder || '');
+  const [bankName, setBankName] = useState<string>(settings.bankName || '');
   const [isSaved, setIsSaved] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Synchronize local state whenever remote settings arrive or update from Firestore
+  React.useEffect(() => {
+    setPaypalEmail(settings.paypalEmail || '');
+    setPaypalMeUsername(settings.paypalMeUsername || '');
+    setBankIban(settings.bankIban || '');
+    setBankAccountHolder(settings.bankAccountHolder || '');
+    setBankName(settings.bankName || '');
+  }, [
+    settings.paypalEmail,
+    settings.paypalMeUsername,
+    settings.bankIban,
+    settings.bankAccountHolder,
+    settings.bankName,
+  ]);
 
   // Test amount
   const [testAmount, setTestAmount] = useState<number>(50);
   const [isReconciling, setIsReconciling] = useState<boolean>(false);
   const [reconciledMessage, setReconciledMessage] = useState<string>('');
 
-  const handleSaveSettings = (e: React.FormEvent) => {
+  const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateSettings({
-      paypalEmail: paypalEmail.trim(),
-      paypalMeUsername: paypalMeUsername.trim().replace(/^@/, ''),
-      bankIban: bankIban.trim(),
-      bankAccountHolder: bankAccountHolder.trim(),
-      bankName: bankName.trim(),
-    });
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 2500);
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      const cleanIban = bankIban.trim().replace(/\s+/g, ' ');
+      const cleanPaypalEmail = paypalEmail.trim();
+      const cleanPaypalMe = paypalMeUsername.trim().replace(/^@/, '');
+      const cleanHolder = bankAccountHolder.trim();
+      const cleanBank = bankName.trim();
+
+      await updateSettings({
+        paypalEmail: cleanPaypalEmail,
+        paypalMeUsername: cleanPaypalMe,
+        bankIban: cleanIban,
+        bankAccountHolder: cleanHolder,
+        bankName: cleanBank,
+      });
+
+      setIsSaving(false);
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 3500);
+    } catch (err) {
+      console.error('Error saving payment settings:', err);
+      setIsSaving(false);
+      setSaveError('Si è verificato un errore durante il salvataggio. Riprova.');
+    }
   };
 
   const handleReconcileToPayPal = () => {
@@ -176,6 +209,17 @@ export const PayPalPayoutSettings: React.FC = () => {
               </div>
             </div>
 
+            <div className="flex items-center justify-between p-3.5 bg-emerald-50/80 rounded-xl border border-emerald-200 text-xs text-emerald-900">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="font-semibold">Coordinate Attive nel Cloud:</span>
+                <span className="font-mono text-stone-800 font-bold">{settings.paypalEmail || 'Non impostata'}</span>
+              </div>
+              <span className="text-[11px] font-semibold text-emerald-700 bg-white/80 px-2 py-0.5 rounded-md border border-emerald-200">
+                Firestore Connesso
+              </span>
+            </div>
+
             <form onSubmit={handleSaveSettings} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-stone-800 mb-1">
@@ -233,6 +277,7 @@ export const PayPalPayoutSettings: React.FC = () => {
                       type="text"
                       value={bankIban}
                       onChange={(e) => setBankIban(e.target.value)}
+                      placeholder="IT60 X 05428 11101 000000124890"
                       className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-stone-900 font-mono text-xs focus:outline-none focus:ring-1 focus:ring-stone-900"
                     />
                   </div>
@@ -245,6 +290,7 @@ export const PayPalPayoutSettings: React.FC = () => {
                       type="text"
                       value={bankAccountHolder}
                       onChange={(e) => setBankAccountHolder(e.target.value)}
+                      placeholder="Nome e Cognome degli sposi"
                       className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-stone-900 text-xs focus:outline-none focus:ring-1 focus:ring-stone-900"
                     />
                   </div>
@@ -257,6 +303,7 @@ export const PayPalPayoutSettings: React.FC = () => {
                       type="text"
                       value={bankName}
                       onChange={(e) => setBankName(e.target.value)}
+                      placeholder="Es. Intesa Sanpaolo"
                       className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-stone-900 text-xs focus:outline-none focus:ring-1 focus:ring-stone-900"
                     />
                   </div>
@@ -264,20 +311,41 @@ export const PayPalPayoutSettings: React.FC = () => {
               </div>
 
 
-              <div className="pt-2 flex items-center justify-between">
-                {isSaved ? (
-                  <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4" />
-                    Coordinate salvate con successo!
-                  </span>
-                ) : (
-                  <span />
-                )}
+              <div className="pt-3 border-t border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  {isSaved && (
+                    <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1.5 animate-in fade-in duration-200">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <span>Coordinate PayPal e IBAN salvate nel database Cloud!</span>
+                    </span>
+                  )}
+                  {saveError && (
+                    <span className="text-xs font-semibold text-rose-600 flex items-center gap-1.5 animate-in fade-in duration-200">
+                      <span>{saveError}</span>
+                    </span>
+                  )}
+                </div>
+
                 <button
                   type="submit"
-                  className="py-2.5 px-6 bg-[#636842] hover:bg-[#525636] text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer"
+                  disabled={isSaving}
+                  className={`py-2.5 px-6 font-semibold rounded-xl text-xs shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                    isSaving
+                      ? 'bg-stone-400 text-white cursor-wait'
+                      : 'bg-[#636842] hover:bg-[#525636] text-white'
+                  }`}
                 >
-                  Salva Coordinate
+                  {isSaving ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Salvataggio nel Cloud...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Salva Coordinate nel Database</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>
@@ -300,12 +368,30 @@ export const PayPalPayoutSettings: React.FC = () => {
               Puoi riconciliare e versare le quote ricevute direttamente al tuo conto PayPal per gestire tutte le spese della cerimonia e del viaggio.
             </p>
 
-            <div className="p-3.5 bg-white/95 rounded-xl border border-stone-200 text-xs space-y-1.5 shadow-2xs">
-              <div className="flex justify-between">
-                <span className="text-stone-500">Destinazione:</span>
-                <span className="font-semibold text-stone-900">{settings.paypalEmail}</span>
+            <div className="p-3.5 bg-white/95 rounded-xl border border-stone-200 text-xs space-y-2 shadow-2xs">
+              <div className="flex justify-between items-center">
+                <span className="text-stone-500">Conto PayPal Destinatario:</span>
+                <span className="font-semibold text-stone-900 truncate max-w-[220px]">{settings.paypalEmail || 'Non impostato'}</span>
               </div>
-              <div className="flex justify-between">
+              {settings.paypalMeUsername && (
+                <div className="flex justify-between items-center">
+                  <span className="text-stone-500">Link PayPal.Me:</span>
+                  <span className="font-mono text-blue-700 font-semibold text-[11px]">paypal.me/{settings.paypalMeUsername}</span>
+                </div>
+              )}
+              {settings.bankIban && (
+                <div className="flex justify-between items-center pt-1.5 border-t border-stone-100">
+                  <span className="text-stone-500">IBAN per Bonifici:</span>
+                  <span className="font-mono text-stone-900 font-semibold text-[11px] truncate max-w-[220px]">{settings.bankIban}</span>
+                </div>
+              )}
+              {settings.bankAccountHolder && (
+                <div className="flex justify-between items-center text-[11px]">
+                  <span className="text-stone-500">Intestatario:</span>
+                  <span className="text-stone-800 font-medium truncate max-w-[220px]">{settings.bankAccountHolder}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center pt-1.5 border-t border-stone-100">
                 <span className="text-stone-500">Saldo Pronto per il versamento:</span>
                 <span className="font-bold tabular-nums text-stone-950 text-sm">
                   {settings.currency}{totalRaised.toLocaleString()}

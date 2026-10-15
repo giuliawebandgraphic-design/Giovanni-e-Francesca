@@ -56,7 +56,7 @@ interface RegistryContextType {
 
   updateDonationStatus: (donationId: string, status: DonationStatus) => void;
   sendThankYou: (guestId: string, donationId?: string, customNote?: string) => void;
-  updateSettings: (updates: Partial<RegistrySettings>) => void;
+  updateSettings: (updates: Partial<RegistrySettings>) => Promise<boolean>;
   resetToDefaults: () => void;
   clearAllData: () => void;
   loadDemoGifts: () => void;
@@ -625,8 +625,32 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     );
   };
 
-  const updateSettings = (updates: Partial<RegistrySettings>) => {
-    setSettings((prev) => ({ ...prev, ...updates }));
+  const updateSettings = async (updates: Partial<RegistrySettings>): Promise<boolean> => {
+    const updatedSettings: RegistrySettings = { ...settings, ...updates };
+    setSettings(updatedSettings);
+
+    try {
+      localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(updatedSettings));
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        const channel = new BroadcastChannel('given2_live_sync');
+        channel.postMessage({ type: 'SETTINGS_UPDATED' });
+        channel.close();
+      }
+    } catch (e) {
+      console.warn('LocalStorage error:', e);
+    }
+
+    let firestoreSuccess = false;
+    try {
+      const sanitized = JSON.parse(JSON.stringify(updatedSettings));
+      await setDoc(doc(db, 'registry', 'main'), { settings: sanitized, lastUpdated: Date.now() }, { merge: true });
+      firestoreSuccess = true;
+    } catch (err) {
+      console.error('Error saving settings to Firestore:', err);
+    }
+
+    pushSyncToServer({ settings: updatedSettings });
+    return firestoreSuccess;
   };
 
   const resetToDefaults = () => {
