@@ -51,8 +51,6 @@ export const PayPalPayoutSettings: React.FC = () => {
 
   // Test amount
   const [testAmount, setTestAmount] = useState<number>(50);
-  const [isReconciling, setIsReconciling] = useState<boolean>(false);
-  const [reconciledMessage, setReconciledMessage] = useState<string>('');
 
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,16 +79,6 @@ export const PayPalPayoutSettings: React.FC = () => {
       setIsSaving(false);
       setSaveError('Si è verificato un errore durante il salvataggio. Riprova.');
     }
-  };
-
-  const handleReconcileToPayPal = () => {
-    setIsReconciling(true);
-    setTimeout(() => {
-      setIsReconciling(false);
-      setReconciledMessage(
-        `Riconciliazione completata con successo! L'intero saldo della lista di ${settings.currency}${totalRaised.toLocaleString()} è allineato al conto PayPal ${settings.paypalEmail}.`
-      );
-    }, 600);
   };
 
   const handleExportCSV = () => {
@@ -352,74 +340,60 @@ export const PayPalPayoutSettings: React.FC = () => {
           </div>
         </div>
 
-        {/* Right: Live Payout Reconciliation & Link Tester */}
+        {/* Right: Live Coordinates Recap & Link Tester */}
         <div className="lg:col-span-5 space-y-6">
-          {/* Versa tutto al conto PayPal Box with #FFE68A & #BCBF97 */}
-          <div className="p-6 bg-gradient-to-br from-white via-[#FFE68A]/20 to-[#BCBF97]/25 rounded-2xl border-2 border-[#BCBF97] shadow-xs space-y-4">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold text-stone-900 bg-[#FFE68A] border border-amber-300">
-              Versamento Saldo Totale
+          {/* Active Coordinates Recap */}
+          <div className="p-6 bg-white rounded-2xl border border-stone-200 shadow-2xs space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="font-editorial text-xl font-bold text-stone-900">
+                Coordinate Attive nel Database
+              </h4>
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100" title="Attivo"></span>
             </div>
-            <h3 className="font-editorial text-2xl font-bold text-stone-900">
-              Versa Tutto al Conto PayPal
-            </h3>
-            <p className="text-xs text-stone-700 leading-relaxed">
-              Hai raccolto complessivamente{' '}
-              <strong className="text-stone-900">{settings.currency}{totalRaised.toLocaleString()}</strong>.
-              Puoi riconciliare e versare le quote ricevute direttamente al tuo conto PayPal per gestire tutte le spese della cerimonia e del viaggio.
+            <p className="text-xs text-stone-600 leading-relaxed">
+              Questi sono i riferimenti attualmente salvati su Firestore e mostrati ai vostri invitati per effettuare i versamenti:
             </p>
 
-            <div className="p-3.5 bg-white/95 rounded-xl border border-stone-200 text-xs space-y-2 shadow-2xs">
+            <div className="p-4 bg-stone-50 rounded-xl border border-stone-200/80 text-xs space-y-2.5 shadow-2xs">
               <div className="flex justify-between items-center">
-                <span className="text-stone-500">Conto PayPal Destinatario:</span>
-                <span className="font-semibold text-stone-900 truncate max-w-[220px]">{settings.paypalEmail || 'Non impostato'}</span>
+                <span className="text-stone-500">Conto PayPal:</span>
+                <span className="font-semibold text-stone-900 truncate max-w-[220px]">
+                  {settings.paypalEmail || 'Non impostato'}
+                </span>
               </div>
               {settings.paypalMeUsername && (
                 <div className="flex justify-between items-center">
                   <span className="text-stone-500">Link PayPal.Me:</span>
-                  <span className="font-mono text-blue-700 font-semibold text-[11px]">paypal.me/{settings.paypalMeUsername}</span>
+                  <span className="font-mono text-blue-700 font-semibold text-[11px]">
+                    paypal.me/{settings.paypalMeUsername}
+                  </span>
                 </div>
               )}
               {settings.bankIban && (
-                <div className="flex justify-between items-center pt-1.5 border-t border-stone-100">
+                <div className="flex justify-between items-center pt-2 border-t border-stone-200">
                   <span className="text-stone-500">IBAN per Bonifici:</span>
-                  <span className="font-mono text-stone-900 font-semibold text-[11px] truncate max-w-[220px]">{settings.bankIban}</span>
+                  <span className="font-mono text-stone-900 font-semibold text-[11px] truncate max-w-[220px]">
+                    {settings.bankIban}
+                  </span>
                 </div>
               )}
               {settings.bankAccountHolder && (
                 <div className="flex justify-between items-center text-[11px]">
                   <span className="text-stone-500">Intestatario:</span>
-                  <span className="text-stone-800 font-medium truncate max-w-[220px]">{settings.bankAccountHolder}</span>
+                  <span className="text-stone-800 font-medium truncate max-w-[220px]">
+                    {settings.bankAccountHolder}
+                  </span>
                 </div>
               )}
-              <div className="flex justify-between items-center pt-1.5 border-t border-stone-100">
-                <span className="text-stone-500">Saldo Pronto per il versamento:</span>
-                <span className="font-bold tabular-nums text-stone-950 text-sm">
-                  {settings.currency}{totalRaised.toLocaleString()}
-                </span>
-              </div>
-            </div>
-
-            {reconciledMessage && (
-              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-800 leading-relaxed font-medium">
-                {reconciledMessage}
-              </div>
-            )}
-
-            <button
-              type="button"
-              onClick={handleReconcileToPayPal}
-              disabled={isReconciling}
-              className="w-full py-3 px-4 bg-[#636842] hover:bg-[#525636] text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
-            >
-              {isReconciling ? (
-                <span>Riconciliazione in corso...</span>
-              ) : (
-                <>
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Riconcilia e Versa Tutto al Conto PayPal</span>
-                </>
+              {settings.bankName && (
+                <div className="flex justify-between items-center text-[11px]">
+                  <span className="text-stone-500">Banca:</span>
+                  <span className="text-stone-800 font-medium truncate max-w-[220px]">
+                    {settings.bankName}
+                  </span>
+                </div>
               )}
-            </button>
+            </div>
           </div>
 
           {/* Live Link Tester */}
