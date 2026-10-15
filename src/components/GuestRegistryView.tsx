@@ -238,17 +238,10 @@ export const GuestRegistryView: React.FC = () => {
                     <div className="space-y-3 pt-2 border-t border-stone-100">
                       <div>
                         <div className="flex items-baseline justify-between text-xs mb-1.5">
-                          <span className="text-stone-500">Raccolti:</span>
-                          <div className="flex items-baseline gap-1">
-                            <span className="font-semibold text-stone-900 tabular-nums text-sm">
-                              {settings.currency}{gift.raisedAmount.toLocaleString()}
-                            </span>
-                            {!gift.isInfiniteQuota && (
-                              <span className="text-stone-400 text-xs">
-                                / {settings.currency}{gift.targetAmount.toLocaleString()}
-                              </span>
-                            )}
-                          </div>
+                          <span className="text-stone-500 font-medium">Avanzamento:</span>
+                          <span className="font-bold text-[#636842] tabular-nums text-sm">
+                            {gift.isInfiniteQuota ? 'Quota libera' : `${percent}%`}
+                          </span>
                         </div>
 
                         {!gift.isInfiniteQuota && (
@@ -271,7 +264,7 @@ export const GuestRegistryView: React.FC = () => {
                             : 'bg-[#636842] hover:bg-[#525636] text-white shadow-xs'
                         }`}
                       >
-                        <span>{isCompleted ? 'Aggiungi quota libera' : 'Dona quota libera a questo regalo'}</span>
+                        <span>Contributo libero</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </div>

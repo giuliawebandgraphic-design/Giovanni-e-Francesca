@@ -5,7 +5,7 @@ import { AddEditGiftModal } from './AddEditGiftModal';
 import { Plus, Edit2, Trash2, CheckCircle2, Star, Gift, Filter, ArrowUpRight } from 'lucide-react';
 
 export const WishlistManager: React.FC = () => {
-  const { gifts, settings, deleteGift, updateGift, setActiveView } = useRegistry();
+  const { gifts, settings, deleteGift, updateGift, loadDemoGifts, setActiveView } = useRegistry();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [giftToEdit, setGiftToEdit] = useState<GiftItem | null>(null);
@@ -44,7 +44,16 @@ export const WishlistManager: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={() => loadDemoGifts()}
+            className="flex items-center gap-1.5 py-2 px-3 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-xl border border-stone-200 transition-colors cursor-pointer"
+            title="Ripristina i 2 prodotti demo nella wishlist"
+          >
+            <span>Ricarica 2 Demo</span>
+          </button>
+
           <button
             onClick={handleOpenAdd}
             className="flex items-center gap-2 py-2 px-4 bg-[#636842] hover:bg-[#525636] text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer"
@@ -198,13 +207,10 @@ export const WishlistManager: React.FC = () => {
                 <div className="pt-3 border-t border-stone-100">
                   <div className="flex items-baseline justify-between text-xs mb-1.5">
                     <span className="text-stone-500">
-                      Raccolto ({gift.contributionsCount} {gift.contributionsCount === 1 ? 'donatore' : 'donatori'}):
+                      Avanzamento ({gift.contributionsCount} {gift.contributionsCount === 1 ? 'donatore' : 'donatori'}):
                     </span>
-                    <span className="font-bold text-stone-900 tabular-nums">
-                      {settings.currency}{gift.raisedAmount.toLocaleString()}
-                      {!gift.isInfiniteQuota && (
-                        <span className="text-stone-400 font-normal"> / {settings.currency}{gift.targetAmount}</span>
-                      )}
+                    <span className="font-bold text-[#636842] tabular-nums">
+                      {gift.isInfiniteQuota ? 'Quota libera' : `${percent}%`}
                     </span>
                   </div>
 

@@ -554,11 +554,15 @@ export const GuestDonationsManager: React.FC = () => {
                             className={`px-2 py-0.5 rounded font-medium ${
                               don.paymentMethod === 'paypal'
                                 ? 'bg-blue-50 text-blue-800'
+                                : don.paymentMethod === 'apple_pay'
+                                ? 'bg-stone-900 text-white'
                                 : 'bg-[#BCBF97]/20 text-[#484c2e]'
                             }`}
                           >
                             {don.paymentMethod === 'paypal'
                               ? `PayPal (${don.paypalTransactionId || 'Verificato'})`
+                              : don.paymentMethod === 'apple_pay'
+                              ? ` Apple Pay (${don.applePayTransactionId || 'Confermato'})`
                               : 'Bonifico Bancario'}
                           </span>
 

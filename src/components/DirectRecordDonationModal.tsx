@@ -111,11 +111,11 @@ export const DirectRecordDonationModal: React.FC<DirectRecordDonationModalProps>
             <label className="block text-xs font-semibold text-stone-800 mb-1.5">
               Canale di versamento *
             </label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => setPaymentMethod('paypal')}
-                className={`py-2 px-3 text-xs font-medium rounded-lg border text-center transition-all cursor-pointer ${
+                className={`py-2 px-2 text-xs font-medium rounded-lg border text-center transition-all cursor-pointer ${
                   paymentMethod === 'paypal'
                     ? 'bg-blue-50 border-blue-500 text-blue-900 font-semibold ring-1 ring-blue-500'
                     : 'bg-stone-50 border-stone-200 text-stone-700 hover:bg-stone-100'
@@ -125,14 +125,25 @@ export const DirectRecordDonationModal: React.FC<DirectRecordDonationModalProps>
               </button>
               <button
                 type="button"
+                onClick={() => setPaymentMethod('apple_pay')}
+                className={`py-2 px-2 text-xs font-medium rounded-lg border text-center transition-all cursor-pointer ${
+                  paymentMethod === 'apple_pay'
+                    ? 'bg-stone-900 border-stone-900 text-white font-semibold ring-1 ring-stone-900'
+                    : 'bg-stone-50 border-stone-200 text-stone-700 hover:bg-stone-100'
+                }`}
+              >
+                 Apple Pay
+              </button>
+              <button
+                type="button"
                 onClick={() => setPaymentMethod('bank_transfer')}
-                className={`py-2 px-3 text-xs font-medium rounded-lg border text-center transition-all cursor-pointer ${
+                className={`py-2 px-2 text-xs font-medium rounded-lg border text-center transition-all cursor-pointer ${
                   paymentMethod === 'bank_transfer'
                     ? 'bg-[#BCBF97]/20 border-[#BCBF97] text-[#484c2e] font-semibold ring-1 ring-[#BCBF97]'
                     : 'bg-stone-50 border-stone-200 text-stone-700 hover:bg-stone-100'
                 }`}
               >
-                Bonifico Bancario
+                Bonifico
               </button>
             </div>
           </div>

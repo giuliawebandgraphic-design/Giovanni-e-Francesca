@@ -184,19 +184,14 @@ export const GuestEmbedView: React.FC = () => {
                     {/* Stato Quota e Donazione */}
                     <div className="space-y-3 pt-3 border-t border-stone-100">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-stone-500">
-                          {gift.isInfiniteQuota ? 'Quota libera' : `Raccolto (${percent}%)`}
+                        <span className="text-stone-500 font-medium">
+                          {gift.isInfiniteQuota ? 'Quota libera' : 'Avanzamento'}
                         </span>
-                        <div className="flex items-baseline gap-1">
-                          <span className="font-bold text-stone-900 tabular-nums text-sm">
-                            {settings.currency}{gift.raisedAmount.toLocaleString()}
+                        {!gift.isInfiniteQuota && (
+                          <span className="font-bold text-[#636842] tabular-nums text-sm">
+                            {percent}%
                           </span>
-                          {!gift.isInfiniteQuota && (
-                            <span className="text-stone-400 text-xs">
-                              / {settings.currency}{gift.targetAmount.toLocaleString()}
-                            </span>
-                          )}
-                        </div>
+                        )}
                       </div>
 
                       {!gift.isInfiniteQuota && (
@@ -213,7 +208,7 @@ export const GuestEmbedView: React.FC = () => {
                         onClick={() => setActiveGiftForContribute(gift)}
                         className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 bg-[#636842] hover:bg-[#525636] text-white shadow-xs transition-colors cursor-pointer"
                       >
-                        <span>{isCompleted ? 'Aggiungi un’ulteriore quota' : 'Dona una quota libera'}</span>
+                        <span>Contributo libero</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </div>

@@ -24,6 +24,7 @@ export const StatisticsPage: React.FC = () => {
     totalTarget,
     paypalTotal,
     bankTotal,
+    applePayTotal,
     setActiveView,
   } = useRegistry();
 
@@ -50,6 +51,7 @@ export const StatisticsPage: React.FC = () => {
   };
 
   const paypalPercent = totalRaised > 0 ? Math.round((paypalTotal / totalRaised) * 100) : 0;
+  const applePayPercent = totalRaised > 0 ? Math.round((applePayTotal / totalRaised) * 100) : 0;
   const bankPercent = totalRaised > 0 ? Math.round((bankTotal / totalRaised) * 100) : 0;
 
   return (
@@ -171,18 +173,30 @@ export const StatisticsPage: React.FC = () => {
                   title={`PayPal: ${paypalPercent}%`}
                 />
                 <div
+                  className="h-full bg-stone-900 transition-all"
+                  style={{ width: `${applePayPercent}%` }}
+                  title={`Apple Pay: ${applePayPercent}%`}
+                />
+                <div
                   className="h-full bg-[#BCBF97] transition-all"
                   style={{ width: `${bankPercent}%` }}
                   title={`Bonifico: ${bankPercent}%`}
                 />
               </div>
 
-              <div className="flex items-center justify-between text-xs pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs pt-1">
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full bg-[#A6C1D8]"></span>
-                  <span className="font-semibold text-stone-800">PayPal Diretto ({paypalPercent}%)</span>
+                  <span className="font-semibold text-stone-800">PayPal ({paypalPercent}%)</span>
                   <span className="text-stone-400">·</span>
                   <span className="font-mono text-stone-600">{settings.currency}{paypalTotal.toLocaleString()}</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-stone-900"></span>
+                  <span className="font-semibold text-stone-800"> Apple Pay ({applePayPercent}%)</span>
+                  <span className="text-stone-400">·</span>
+                  <span className="font-mono text-stone-600">{settings.currency}{applePayTotal.toLocaleString()}</span>
                 </div>
 
                 <div className="flex items-center gap-2">

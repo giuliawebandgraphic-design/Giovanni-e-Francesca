@@ -63,6 +63,7 @@ interface RegistryContextType {
   totalRaised: number;
   paypalTotal: number;
   bankTotal: number;
+  applePayTotal: number;
   getPayPalLink: (amount: number, referenceCode: string, note?: string) => string;
   refreshRegistry: () => Promise<void>;
   isFirestoreConnected: boolean;
@@ -92,7 +93,11 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [gifts, setGifts] = useState<GiftItem[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.GIFTS);
-      return saved ? JSON.parse(saved) : INITIAL_GIFTS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+      return INITIAL_GIFTS;
     } catch {
       return INITIAL_GIFTS;
     }
@@ -242,10 +247,18 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           if (cloudData) {
             isRemoteUpdatingRef.current = true;
             if (Array.isArray(cloudData.gifts)) {
-              setGifts(cloudData.gifts);
-              try {
-                localStorage.setItem(STORAGE_KEYS.GIFTS, JSON.stringify(cloudData.gifts));
-              } catch {}
+              if (cloudData.gifts.length > 0) {
+                setGifts(cloudData.gifts);
+                try {
+                  localStorage.setItem(STORAGE_KEYS.GIFTS, JSON.stringify(cloudData.gifts));
+                } catch {}
+              } else {
+                setGifts(DEMO_PRESET_GIFTS);
+                pushSyncToFirestore({ gifts: DEMO_PRESET_GIFTS });
+                try {
+                  localStorage.setItem(STORAGE_KEYS.GIFTS, JSON.stringify(DEMO_PRESET_GIFTS));
+                } catch {}
+              }
             }
             if (Array.isArray(cloudData.guests)) {
               setGuests(cloudData.guests);
@@ -525,6 +538,10 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         params.paymentMethod === 'paypal'
           ? `PP-${Math.floor(1000000 + Math.random() * 9000000)}`
           : undefined,
+      applePayTransactionId:
+        params.paymentMethod === 'apple_pay'
+          ? `APL-${Math.floor(1000000 + Math.random() * 9000000)}`
+          : undefined,
       message: params.message || '',
       createdAt: new Date().toISOString(),
       thankYouSent: false,
@@ -638,6 +655,11 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const loadDemoGifts = () => {
     setGifts(DEMO_PRESET_GIFTS);
+    pushSyncToFirestore({ gifts: DEMO_PRESET_GIFTS });
+    pushSyncToServer({ gifts: DEMO_PRESET_GIFTS });
+    try {
+      localStorage.setItem(STORAGE_KEYS.GIFTS, JSON.stringify(DEMO_PRESET_GIFTS));
+    } catch {}
   };
 
   // Direct PayPal link generator
@@ -664,6 +686,10 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const bankTotal = completedDonations
     .filter((d) => d.paymentMethod === 'bank_transfer')
+    .reduce((sum, d) => sum + d.amount, 0);
+
+  const applePayTotal = completedDonations
+    .filter((d) => d.paymentMethod === 'apple_pay')
     .reduce((sum, d) => sum + d.amount, 0);
 
   return (
@@ -697,6 +723,7 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         totalRaised,
         paypalTotal,
         bankTotal,
+        applePayTotal,
         getPayPalLink,
         refreshRegistry,
         isFirestoreConnected,

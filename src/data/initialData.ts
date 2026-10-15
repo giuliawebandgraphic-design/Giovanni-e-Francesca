@@ -15,14 +15,12 @@ export const INITIAL_SETTINGS: RegistrySettings = {
   bankName: 'Intesa Sanpaolo - Filiale Verona Centro',
   bankBic: 'BCITITMM',
   heroImage: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80',
+  applePayEnabled: true,
+  applePayRecipient: '+39 340 8899123',
+  applePayNote: 'Accredito istantaneo su Apple Pay / Apple Wallet degli sposi',
 };
 
-// Clean default state: zero dummy gifts, zero dummy guests, zero dummy donations
-export const INITIAL_GIFTS: GiftItem[] = [];
-export const INITIAL_GUESTS: Guest[] = [];
-export const INITIAL_DONATIONS: Donation[] = [];
-
-// Optional preset demo data if user ever wants to load a sample
+// Default state: 2 demo gifts visible so couples can review and customize
 export const DEMO_PRESET_GIFTS: GiftItem[] = [
   {
     id: 'gift-1',
@@ -33,12 +31,12 @@ export const DEMO_PRESET_GIFTS: GiftItem[] = [
       'Quattro notti in un esclusivo bungalow su palafitta a Bora Bora con colazione servita in canoa e tramonti sul monte Otemanu.',
     imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
     targetAmount: 3200,
-    raisedAmount: 0,
+    raisedAmount: 850,
     suggestedQuotas: [50, 100, 150, 300],
     status: 'available',
     isPriority: true,
-    contributionsCount: 0,
-    createdAt: new Date().toISOString(),
+    contributionsCount: 3,
+    createdAt: '2026-07-01T10:00:00.000Z',
   },
   {
     id: 'gift-2',
@@ -49,11 +47,15 @@ export const DEMO_PRESET_GIFTS: GiftItem[] = [
       'Servizio da tavola artigianale in ceramica gres smaltata a mano nei toni della sabbia e della salvia.',
     imageUrl: 'https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=800&q=80',
     targetAmount: 650,
-    raisedAmount: 0,
+    raisedAmount: 150,
     suggestedQuotas: [30, 50, 100],
     status: 'available',
     isPriority: false,
-    contributionsCount: 0,
-    createdAt: new Date().toISOString(),
+    contributionsCount: 1,
+    createdAt: '2026-07-02T14:30:00.000Z',
   },
 ];
+
+export const INITIAL_GIFTS: GiftItem[] = DEMO_PRESET_GIFTS;
+export const INITIAL_GUESTS: Guest[] = [];
+export const INITIAL_DONATIONS: Donation[] = [];
