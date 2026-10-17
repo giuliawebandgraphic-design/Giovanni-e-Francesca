@@ -39,6 +39,8 @@ interface RegistryContextType {
     giftId: string;
     amount: number;
     paymentMethod: PaymentMethod;
+    stripePaymentIntentId?: string;
+    paypalTransactionId?: string;
     message?: string;
     status?: DonationStatus;
   }) => { donation: Donation; guest: Guest };
@@ -66,6 +68,8 @@ interface RegistryContextType {
   totalRaised: number;
   paypalTotal: number;
   bankTotal: number;
+  applePayTotal: number;
+  stripeTotal: number;
   getPayPalLink: (amount: number, referenceCode: string, note?: string) => string;
   refreshRegistry: () => Promise<void>;
   isFirestoreConnected: boolean;
@@ -458,6 +462,8 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     giftId: string;
     amount: number;
     paymentMethod: PaymentMethod;
+    stripePaymentIntentId?: string;
+    paypalTransactionId?: string;
     message?: string;
     status?: DonationStatus;
   }) => {
@@ -504,10 +510,12 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       amount: params.amount,
       paymentMethod: params.paymentMethod,
       status: params.status || 'completed',
+      stripePaymentIntentId: params.stripePaymentIntentId,
       paypalTransactionId:
-        params.paymentMethod === 'paypal'
+        params.paypalTransactionId ||
+        (params.paymentMethod === 'paypal'
           ? `PP-${Math.floor(1000000 + Math.random() * 9000000)}`
-          : undefined,
+          : undefined),
       message: params.message || '',
       createdAt: new Date().toISOString(),
       thankYouSent: false,
@@ -708,6 +716,14 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     .filter((d) => d.paymentMethod === 'bank_transfer')
     .reduce((sum, d) => sum + d.amount, 0);
 
+  const applePayTotal = completedDonations
+    .filter((d) => d.paymentMethod === 'apple_pay')
+    .reduce((sum, d) => sum + d.amount, 0);
+
+  const stripeTotal = completedDonations
+    .filter((d) => d.paymentMethod === 'stripe' || Boolean(d.stripePaymentIntentId))
+    .reduce((sum, d) => sum + d.amount, 0);
+
   return (
     <RegistryContext.Provider
       value={{
@@ -742,6 +758,8 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         totalRaised,
         paypalTotal,
         bankTotal,
+        applePayTotal,
+        stripeTotal,
         getPayPalLink,
         refreshRegistry,
         isFirestoreConnected,

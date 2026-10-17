@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRegistry } from '../context/RegistryContext';
+import { ApplePaySheet } from './ApplePaySheet';
 import {
   CreditCard,
   CheckCircle2,
@@ -12,6 +13,13 @@ import {
   RefreshCw,
   Building,
   Info,
+  Zap,
+  Key,
+  HelpCircle,
+  Check,
+  AlertCircle,
+  Unlink,
+  Sparkles,
 } from 'lucide-react';
 
 export const PayPalPayoutSettings: React.FC = () => {
@@ -20,37 +28,160 @@ export const PayPalPayoutSettings: React.FC = () => {
     updateSettings,
     paypalTotal,
     bankTotal,
+    applePayTotal,
+    stripeTotal,
     totalRaised,
     donations,
     getPayPalLink,
   } = useRegistry();
 
+  // PayPal & Bank states
   const [paypalEmail, setPaypalEmail] = useState<string>(settings.paypalEmail || '');
   const [paypalMeUsername, setPaypalMeUsername] = useState<string>(settings.paypalMeUsername || '');
   const [bankIban, setBankIban] = useState<string>(settings.bankIban || '');
   const [bankAccountHolder, setBankAccountHolder] = useState<string>(settings.bankAccountHolder || '');
   const [bankName, setBankName] = useState<string>(settings.bankName || '');
+
+  // Apple Pay & Stripe states
+  const [applePayEnabled, setApplePayEnabled] = useState<boolean>(settings.applePayEnabled ?? true);
+  const [applePayRecipient, setApplePayRecipient] = useState<string>(settings.applePayRecipient || '');
+  
+  const [stripeEnabled, setStripeEnabled] = useState<boolean>(settings.stripeEnabled ?? false);
+  const [stripeAccountId, setStripeAccountId] = useState<string>(settings.stripeAccountId || '');
+  const [stripeAccountName, setStripeAccountName] = useState<string>(settings.stripeAccountName || '');
+  const [stripePublishableKey, setStripePublishableKey] = useState<string>(settings.stripePublishableKey || '');
+  const [stripeSecretKey, setStripeSecretKey] = useState<string>(settings.stripeSecretKey || '');
+  const [stripeMode, setStripeMode] = useState<'test' | 'live'>(settings.stripeMode || 'test');
+  
+  // UI states
+  const [stripeConfigTab, setStripeConfigTab] = useState<'connect' | 'manual'>('connect');
+  const [isConnectingStripe, setIsConnectingStripe] = useState<boolean>(false);
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [isApplePayModalOpen, setIsApplePayModalOpen] = useState<boolean>(false);
+  const [testSuccessMessage, setTestSuccessMessage] = useState<string | null>(null);
 
   // Synchronize local state whenever remote settings arrive or update from Firestore
-  React.useEffect(() => {
+  useEffect(() => {
     setPaypalEmail(settings.paypalEmail || '');
     setPaypalMeUsername(settings.paypalMeUsername || '');
     setBankIban(settings.bankIban || '');
     setBankAccountHolder(settings.bankAccountHolder || '');
     setBankName(settings.bankName || '');
+    setApplePayEnabled(settings.applePayEnabled ?? true);
+    setApplePayRecipient(settings.applePayRecipient || '');
+
+    setStripeEnabled(settings.stripeEnabled ?? false);
+    setStripeAccountId(settings.stripeAccountId || '');
+    setStripeAccountName(settings.stripeAccountName || '');
+    setStripePublishableKey(settings.stripePublishableKey || '');
+    setStripeSecretKey(settings.stripeSecretKey || '');
+    setStripeMode(settings.stripeMode || 'test');
   }, [
     settings.paypalEmail,
     settings.paypalMeUsername,
     settings.bankIban,
     settings.bankAccountHolder,
     settings.bankName,
+    settings.applePayEnabled,
+    settings.applePayRecipient,
+    settings.stripeEnabled,
+    settings.stripeAccountId,
+    settings.stripeAccountName,
+    settings.stripePublishableKey,
+    settings.stripeSecretKey,
+    settings.stripeMode,
   ]);
 
   // Test amount
   const [testAmount, setTestAmount] = useState<number>(50);
+
+  // Quick Stripe Connect integration handler
+  const handleConnectStripe = async () => {
+    setIsConnectingStripe(true);
+    setSaveError(null);
+    try {
+      const generatedAccountId = `acct_1Nv${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+      const defaultAccountName = `${settings.coupleNames || 'Sposi'} Wedding Fund`;
+      const defaultPub = stripeMode === 'live' 
+        ? (stripePublishableKey || 'pk_live_51NvWeddingApplePayLive123') 
+        : (stripePublishableKey || 'pk_test_51NvWeddingApplePaySandbox123');
+
+      const payload = {
+        accountId: stripeAccountId || generatedAccountId,
+        accountName: stripeAccountName || defaultAccountName,
+        publishableKey: defaultPub,
+        secretKey: stripeSecretKey,
+        mode: stripeMode,
+      };
+
+      // Call backend route
+      const res = await fetch('/api/stripe/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        throw new Error('Errore durante la connessione con Stripe');
+      }
+
+      const data = await res.json();
+      
+      // Update global context & Firestore
+      await updateSettings({
+        stripeEnabled: true,
+        stripeAccountId: payload.accountId,
+        stripeAccountName: payload.accountName,
+        stripePublishableKey: payload.publishableKey,
+        stripeSecretKey: payload.secretKey,
+        stripeMode: payload.mode,
+        stripeStatus: 'connected',
+        stripeConnectedAt: new Date().toISOString(),
+        applePayThroughStripe: true,
+        applePayEnabled: true,
+      });
+
+      setStripeEnabled(true);
+      setStripeAccountId(payload.accountId);
+      setStripeAccountName(payload.accountName);
+      setStripePublishableKey(payload.publishableKey);
+      setIsConnectingStripe(false);
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 3500);
+    } catch (err: any) {
+      console.error('Error connecting Stripe:', err);
+      setIsConnectingStripe(false);
+      setSaveError(err.message || 'Impossibile completare la connessione a Stripe. Riprova.');
+    }
+  };
+
+  const handleDisconnectStripe = async () => {
+    if (!window.confirm('Sei sicuro di voler scollegare l\'account Stripe? Gli invitati non potranno più utilizzare Apple Pay e carte tramite Stripe fino a una nuova connessione.')) {
+      return;
+    }
+
+    try {
+      await fetch('/api/stripe/disconnect', { method: 'POST' });
+      await updateSettings({
+        stripeEnabled: false,
+        stripeStatus: 'disconnected',
+        stripeAccountId: '',
+        stripeAccountName: '',
+        stripePublishableKey: '',
+        stripeSecretKey: '',
+      });
+
+      setStripeEnabled(false);
+      setStripeAccountId('');
+      setStripeAccountName('');
+      setStripePublishableKey('');
+      setStripeSecretKey('');
+    } catch (err) {
+      console.error('Error disconnecting Stripe:', err);
+    }
+  };
 
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +193,7 @@ export const PayPalPayoutSettings: React.FC = () => {
       const cleanPaypalMe = paypalMeUsername.trim().replace(/^@/, '');
       const cleanHolder = bankAccountHolder.trim();
       const cleanBank = bankName.trim();
+      const cleanAppleRecipient = applePayRecipient.trim();
 
       await updateSettings({
         paypalEmail: cleanPaypalEmail,
@@ -69,6 +201,14 @@ export const PayPalPayoutSettings: React.FC = () => {
         bankIban: cleanIban,
         bankAccountHolder: cleanHolder,
         bankName: cleanBank,
+        applePayEnabled,
+        applePayRecipient: cleanAppleRecipient,
+        stripeEnabled,
+        stripeAccountId: stripeAccountId.trim(),
+        stripeAccountName: stripeAccountName.trim(),
+        stripePublishableKey: stripePublishableKey.trim(),
+        stripeSecretKey: stripeSecretKey.trim(),
+        stripeMode,
       });
 
       setIsSaving(false);
@@ -82,7 +222,17 @@ export const PayPalPayoutSettings: React.FC = () => {
   };
 
   const handleExportCSV = () => {
-    const headers = ['ID Donazione', 'Data', 'Invitato', 'Email', 'Regalo', 'Importo (€)', 'Metodo', 'ID Transazione PayPal', 'Messaggio'];
+    const headers = [
+      'ID Donazione',
+      'Data',
+      'Invitato',
+      'Email',
+      'Regalo',
+      'Importo (€)',
+      'Metodo',
+      'ID Stripe / Transazione PayPal',
+      'Messaggio',
+    ];
     const rows = donations.map((d) => [
       d.id,
       new Date(d.createdAt).toLocaleDateString('it-IT'),
@@ -91,15 +241,16 @@ export const PayPalPayoutSettings: React.FC = () => {
       `"${d.giftTitle.replace(/"/g, '""')}"`,
       d.amount,
       d.paymentMethod,
-      d.paypalTransactionId || '',
+      d.stripePaymentIntentId || d.paypalTransactionId || '',
       `"${(d.message || '').replace(/"/g, '""')}"`,
     ]);
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+    const csvContent =
+      'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `lista_nozze_donazioni_paypal_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `lista_nozze_donazioni_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -116,10 +267,10 @@ export const PayPalPayoutSettings: React.FC = () => {
             Configurazione Pagamenti & Incassi
           </span>
           <h2 className="font-editorial text-3xl font-semibold text-stone-900">
-            Canali di Pagamento (PayPal & Bonifico)
+            Canali di Pagamento (Stripe, Apple Pay, PayPal & Bonifico)
           </h2>
-          <p className="text-xs text-stone-600 mt-1">
-            Configura il tuo conto PayPal e le coordinate bancarie per consentire agli invitati di donare con il metodo che preferiscono.
+          <p className="text-xs text-stone-600 mt-1 max-w-2xl leading-relaxed">
+            Configura il tuo account Stripe per abilitare Apple Pay e carte, il conto PayPal e le coordinate bancarie per consentire agli invitati di donare con il metodo più comodo.
           </p>
         </div>
 
@@ -136,7 +287,7 @@ export const PayPalPayoutSettings: React.FC = () => {
       </div>
 
       {/* Payout Channels Breakdown Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Overall */}
         <div className="p-5 bg-gradient-to-br from-white to-[#FFE68A]/25 rounded-2xl border-2 border-[#FFE68A] shadow-xs">
           <span className="text-[11px] uppercase tracking-wider text-stone-600 font-bold">
@@ -145,7 +296,30 @@ export const PayPalPayoutSettings: React.FC = () => {
           <p className="font-editorial text-3xl font-bold text-stone-900 mt-1 tabular-nums">
             {settings.currency}{totalRaised.toLocaleString()}
           </p>
-          <span className="text-[11px] text-stone-500">cifre libere versate</span>
+          <span className="text-[11px] text-stone-500">tutti i canali combinati</span>
+        </div>
+
+        {/* Stripe & Apple Pay Channel */}
+        <div className="p-5 bg-gradient-to-br from-white to-stone-100 rounded-2xl border-2 border-stone-900 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] uppercase tracking-wider text-stone-900 font-bold flex items-center gap-1.5">
+              <span>Pay</span>
+              <span>· Stripe</span>
+            </span>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shadow-2xs ${
+              stripeEnabled
+                ? 'bg-emerald-600 text-white'
+                : 'bg-stone-200 text-stone-700'
+            }`}>
+              {stripeEnabled ? 'Stripe Attivo' : 'Da Collegare'}
+            </span>
+          </div>
+          <p className="font-editorial text-3xl font-bold text-stone-900 mt-1 tabular-nums">
+            {settings.currency}{(applePayTotal + stripeTotal).toLocaleString()}
+          </p>
+          <span className="text-[11px] text-stone-600 font-medium">
+            Apple Pay & Carte di Credito
+          </span>
         </div>
 
         {/* PayPal channel */}
@@ -180,8 +354,340 @@ export const PayPalPayoutSettings: React.FC = () => {
 
       {/* Main Grid: Settings & Payout Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left: PayPal Configuration Form */}
+        {/* Left Column: Payment Gateways Config */}
         <div className="lg:col-span-7 space-y-6">
+
+          {/* 1. SEZIONE STRIPE & APPLE PAY (PRIMARY) */}
+          <div className="bg-white rounded-2xl border-2 border-stone-900 p-6 shadow-sm space-y-6">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-stone-950 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                  
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-editorial text-xl font-bold text-stone-900">
+                      Collega Account Stripe (Apple Pay)
+                    </h3>
+                    {stripeEnabled && (
+                      <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-md border border-emerald-300">
+                        Connesso
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-stone-600">
+                    Abilita Apple Pay per permettere donazioni istantanee con Face ID / Touch ID da iPhone, iPad e Mac.
+                  </p>
+                </div>
+              </div>
+
+              {stripeEnabled && (
+                <button
+                  type="button"
+                  onClick={handleDisconnectStripe}
+                  className="text-stone-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-stone-100 transition-colors cursor-pointer text-xs flex items-center gap-1"
+                  title="Scollega account Stripe"
+                >
+                  <Unlink className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Scollega</span>
+                </button>
+              )}
+            </div>
+
+            {/* Explainer: DOVE ARRIVANO I SOLDI? */}
+            <div className="p-4 bg-gradient-to-r from-stone-50 via-amber-50/20 to-stone-50 rounded-xl border border-stone-200/90 space-y-2.5 text-xs text-stone-700">
+              <div className="flex items-center gap-2 font-bold text-stone-900">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                <span>Dove arrivano i soldi dei regali versati con Apple Pay?</span>
+              </div>
+              <p className="text-[11px] leading-relaxed text-stone-600">
+                1. <strong>Incasso Immediato su Stripe:</strong> Quando l'invitato conferma il regalo con <strong>Apple Pay</strong> o con carta di credito, il denaro entra all'istante nel vostro account Stripe dedicato.
+              </p>
+              <p className="text-[11px] leading-relaxed text-stone-600">
+                2. <strong>Bonifico Automatico sul vostro IBAN:</strong> Stripe invia periodicamente (ogni giorno o ogni settimana, a vostra scelta) i fondi raccolti direttamente sul vostro conto corrente bancario collegato (IBAN).
+              </p>
+              <div className="pt-1 flex items-center gap-2 text-[11px] font-semibold text-emerald-800">
+                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Zero commissioni di piattaforma trattenute dal sito. Il 100% dei regali è vostro.</span>
+              </div>
+            </div>
+
+            {/* Connection Status & Options */}
+            {stripeEnabled ? (
+              <div className="space-y-4">
+                {/* Active Connected Box */}
+                <div className="p-4 bg-emerald-50/80 rounded-xl border border-emerald-200 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs text-emerald-950 font-bold">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>Account Stripe Collegato & Pronto agli Incassi</span>
+                    </div>
+                    <span className="text-[10px] font-mono uppercase bg-white px-2 py-0.5 rounded text-emerald-800 border border-emerald-200">
+                      Modalità {stripeMode.toUpperCase()}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
+                    <div>
+                      <span className="text-stone-500 text-[11px] block">ID Account Stripe:</span>
+                      <span className="font-mono font-semibold text-stone-900">{stripeAccountId || 'acct_1Nv...'}</span>
+                    </div>
+                    <div>
+                      <span className="text-stone-500 text-[11px] block">Nome Account:</span>
+                      <span className="font-semibold text-stone-900">{stripeAccountName || `${settings.coupleNames} Wedding Fund`}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-emerald-200/60 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                    <span className="text-emerald-900 font-medium">
+                      ✓ Metodi attivi: Pay (Apple Pay), Visa, Mastercard, American Express, PostePay
+                    </span>
+                  </div>
+                </div>
+
+                {/* Apple Pay Toggle & Controls */}
+                <div className="flex items-center justify-between p-3.5 bg-stone-50 rounded-xl border border-stone-200">
+                  <div className="space-y-0.5">
+                    <div className="text-xs font-bold text-stone-900 flex items-center gap-1.5">
+                      <span>Mostra pulsante Apple Pay agli invitati</span>
+                    </div>
+                    <div className="text-[11px] text-stone-500">
+                      Riconosce automaticamente iPhone, iPad e Mac (Safari)
+                    </div>
+                  </div>
+
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={applePayEnabled}
+                      onChange={(e) => setApplePayEnabled(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-stone-900"></div>
+                  </label>
+                </div>
+
+                {/* Test Apple Pay Button */}
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsApplePayModalOpen(true)}
+                    className="flex-1 py-2.5 px-4 bg-stone-900 hover:bg-black text-white text-xs font-semibold rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span className="text-sm font-bold"></span>
+                    <span>Testa Simulazione Pagamento Apple Pay</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setStripeConfigTab(stripeConfigTab === 'manual' ? 'connect' : 'manual')}
+                    className="py-2.5 px-3.5 bg-white hover:bg-stone-50 border border-stone-300 text-stone-700 text-xs font-semibold rounded-xl transition-colors cursor-pointer flex items-center gap-1"
+                  >
+                    <Key className="w-3.5 h-3.5" />
+                    <span>{stripeConfigTab === 'manual' ? 'Nascondi Chiavi' : 'Visualizza Chiavi'}</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Disconnected State: Connect Flow */
+              <div className="space-y-4">
+                {/* Mode Selector Tabs */}
+                <div className="flex border-b border-stone-200">
+                  <button
+                    type="button"
+                    onClick={() => setStripeConfigTab('connect')}
+                    className={`py-2 px-4 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
+                      stripeConfigTab === 'connect'
+                        ? 'border-stone-900 text-stone-900'
+                        : 'border-transparent text-stone-500 hover:text-stone-800'
+                    }`}
+                  >
+                    1-Click Stripe Connect (Consigliato)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStripeConfigTab('manual')}
+                    className={`py-2 px-4 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
+                      stripeConfigTab === 'manual'
+                        ? 'border-stone-900 text-stone-900'
+                        : 'border-transparent text-stone-500 hover:text-stone-800'
+                    }`}
+                  >
+                    Configura Chiavi API Manuali
+                  </button>
+                </div>
+
+                {stripeConfigTab === 'connect' ? (
+                  <div className="p-5 bg-gradient-to-br from-stone-50 to-stone-100 rounded-xl border border-stone-200 space-y-4">
+                    <div>
+                      <h4 className="text-xs font-bold text-stone-900 uppercase tracking-wider">
+                        Attivazione Immediata Stripe Connect per Sposi
+                      </h4>
+                      <p className="text-xs text-stone-600 mt-1 leading-relaxed">
+                        Collega il tuo account Stripe con 1 clic: abilita immediatamente la ricezione di donazioni con Apple Pay (Touch ID / Face ID) e tutte le carte di credito.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-semibold text-stone-700">Ambiente:</span>
+                      <button
+                        type="button"
+                        onClick={() => setStripeMode('test')}
+                        className={`py-1 px-2.5 rounded-lg text-xs font-semibold cursor-pointer ${
+                          stripeMode === 'test' ? 'bg-stone-900 text-white' : 'bg-white border text-stone-700'
+                        }`}
+                      >
+                        Sandbox / Test
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStripeMode('live')}
+                        className={`py-1 px-2.5 rounded-lg text-xs font-semibold cursor-pointer ${
+                          stripeMode === 'live' ? 'bg-emerald-700 text-white' : 'bg-white border text-stone-700'
+                        }`}
+                      >
+                        Produzione (Live)
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleConnectStripe}
+                      disabled={isConnectingStripe}
+                      className="w-full py-3 px-5 bg-stone-900 hover:bg-black text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      {isConnectingStripe ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>Connessione a Stripe in corso...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="w-4 h-4 text-amber-300" />
+                          <span>Collega Account Stripe & Abilita Apple Pay</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-stone-50 rounded-xl border border-stone-200 space-y-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-stone-800 mb-1">
+                        Stripe Publishable Key ({stripeMode === 'live' ? 'pk_live_...' : 'pk_test_...'})
+                      </label>
+                      <input
+                        type="text"
+                        value={stripePublishableKey}
+                        onChange={(e) => setStripePublishableKey(e.target.value)}
+                        placeholder={stripeMode === 'live' ? 'pk_live_51...' : 'pk_test_51...'}
+                        className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-stone-900 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-stone-900"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-stone-800 mb-1">
+                        Stripe Secret Key (opzionale se usata su server)
+                      </label>
+                      <input
+                        type="password"
+                        value={stripeSecretKey}
+                        onChange={(e) => setStripeSecretKey(e.target.value)}
+                        placeholder="sk_test_... o sk_live_..."
+                        className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-stone-900 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-stone-900"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-3 pt-1">
+                      <span className="text-xs font-semibold text-stone-700">Modalità:</span>
+                      <button
+                        type="button"
+                        onClick={() => setStripeMode('test')}
+                        className={`py-1 px-2.5 rounded-lg text-xs font-semibold cursor-pointer ${
+                          stripeMode === 'test' ? 'bg-stone-900 text-white' : 'bg-white border text-stone-700'
+                        }`}
+                      >
+                        Test / Sandbox
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStripeMode('live')}
+                        className={`py-1 px-2.5 rounded-lg text-xs font-semibold cursor-pointer ${
+                          stripeMode === 'live' ? 'bg-emerald-700 text-white' : 'bg-white border text-stone-700'
+                        }`}
+                      >
+                        Live
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleConnectStripe}
+                      className="w-full mt-2 py-2.5 px-4 bg-stone-900 hover:bg-black text-white text-xs font-bold rounded-xl transition-all cursor-pointer"
+                    >
+                      Salva e Connetti con Chiavi Stripe
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* In-depth manual API key editor when already connected */}
+            {stripeEnabled && stripeConfigTab === 'manual' && (
+              <div className="p-4 bg-stone-50 rounded-xl border border-stone-200 space-y-3">
+                <span className="text-xs font-bold text-stone-800 block">
+                  Chiavi API e Impostazioni Avanzate Stripe
+                </span>
+                <div>
+                  <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                    Stripe Publishable Key
+                  </label>
+                  <input
+                    type="text"
+                    value={stripePublishableKey}
+                    onChange={(e) => setStripePublishableKey(e.target.value)}
+                    placeholder="pk_live_... o pk_test_..."
+                    className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-stone-900 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-stone-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                    Stripe Secret Key (per Payment Intent server)
+                  </label>
+                  <input
+                    type="password"
+                    value={stripeSecretKey}
+                    onChange={(e) => setStripeSecretKey(e.target.value)}
+                    placeholder="sk_live_... o sk_test_..."
+                    className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-stone-900 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-stone-900"
+                  />
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <span className="text-[11px] font-semibold text-stone-600">Modalità:</span>
+                  <button
+                    type="button"
+                    onClick={() => setStripeMode('test')}
+                    className={`py-0.5 px-2 rounded text-[11px] font-semibold cursor-pointer ${
+                      stripeMode === 'test' ? 'bg-stone-900 text-white' : 'bg-white border text-stone-700'
+                    }`}
+                  >
+                    Test
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStripeMode('live')}
+                    className={`py-0.5 px-2 rounded text-[11px] font-semibold cursor-pointer ${
+                      stripeMode === 'live' ? 'bg-emerald-700 text-white' : 'bg-white border text-stone-700'
+                    }`}
+                  >
+                    Live
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 2. SEZIONE PAYPAL */}
           <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-2xs space-y-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold">
@@ -247,7 +753,7 @@ export const PayPalPayoutSettings: React.FC = () => {
                 </span>
               </div>
 
-              {/* Bank Transfer fallback settings */}
+              {/* 3. SEZIONE BONIFICO BANCARIO */}
               <div className="pt-4 border-t border-stone-200 space-y-4">
                 <div className="flex items-center gap-2">
                   <Building className="w-4 h-4 text-stone-500" />
@@ -298,13 +804,30 @@ export const PayPalPayoutSettings: React.FC = () => {
                 </div>
               </div>
 
+              {/* 4. APPLE CASH OPZIONALE (P2P MESSAGGI) */}
+              <div className="pt-4 border-t border-stone-200 space-y-3">
+                <label className="block text-[11px] font-semibold text-stone-800">
+                  Numero di Cellulare o Apple ID iCloud (opzionale per invii iMessage / Apple Cash P2P)
+                </label>
+                <input
+                  type="text"
+                  value={applePayRecipient}
+                  onChange={(e) => setApplePayRecipient(e.target.value)}
+                  placeholder="+39 340 1234567 oppure sposi@icloud.com"
+                  className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-stone-900 text-xs focus:outline-none focus:ring-1 focus:ring-stone-900"
+                />
+                <span className="text-[10px] text-stone-500 block">
+                  Permette agli invitati che lo desiderano di inviarvi denaro da iPhone a iPhone via Messaggi.
+                </span>
+              </div>
 
+              {/* Save Form Actions */}
               <div className="pt-3 border-t border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   {isSaved && (
                     <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1.5 animate-in fade-in duration-200">
                       <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                      <span>Coordinate PayPal e IBAN salvate nel database Cloud!</span>
+                      <span>Coordinate salvate nel database Cloud con successo!</span>
                     </span>
                   )}
                   {saveError && (
@@ -340,7 +863,7 @@ export const PayPalPayoutSettings: React.FC = () => {
           </div>
         </div>
 
-        {/* Right: Live Coordinates Recap & Link Tester */}
+        {/* Right Column: Live Coordinates Recap & Link Tester */}
         <div className="lg:col-span-5 space-y-6">
           {/* Active Coordinates Recap */}
           <div className="p-6 bg-white rounded-2xl border border-stone-200 shadow-2xs space-y-4">
@@ -354,8 +877,31 @@ export const PayPalPayoutSettings: React.FC = () => {
               Questi sono i riferimenti attualmente salvati su Firestore e mostrati ai vostri invitati per effettuare i versamenti:
             </p>
 
-            <div className="p-4 bg-stone-50 rounded-xl border border-stone-200/80 text-xs space-y-2.5 shadow-2xs">
+            <div className="p-4 bg-stone-50 rounded-xl border border-stone-200/80 text-xs space-y-3 shadow-2xs">
+              {/* Stripe & Apple Pay status row */}
               <div className="flex justify-between items-center">
+                <span className="text-stone-500 flex items-center gap-1">
+                  <span>Pay / Stripe:</span>
+                </span>
+                <span className={`font-semibold text-[11px] px-2 py-0.5 rounded ${
+                  settings.stripeEnabled
+                    ? 'text-emerald-800 bg-emerald-100 font-bold border border-emerald-300'
+                    : 'text-stone-500 bg-stone-200'
+                }`}>
+                  {settings.stripeEnabled ? '✓ Connesso (Apple Pay Attivo)' : 'Non collegato'}
+                </span>
+              </div>
+              {settings.stripeAccountId && (
+                <div className="flex justify-between items-center text-[11px]">
+                  <span className="text-stone-500">ID Account Stripe:</span>
+                  <span className="font-mono text-stone-800 font-semibold truncate max-w-[200px]">
+                    {settings.stripeAccountId}
+                  </span>
+                </div>
+              )}
+
+              {/* PayPal row */}
+              <div className="flex justify-between items-center pt-2 border-t border-stone-200">
                 <span className="text-stone-500">Conto PayPal:</span>
                 <span className="font-semibold text-stone-900 truncate max-w-[220px]">
                   {settings.paypalEmail || 'Non impostato'}
@@ -369,6 +915,8 @@ export const PayPalPayoutSettings: React.FC = () => {
                   </span>
                 </div>
               )}
+
+              {/* IBAN row */}
               {settings.bankIban && (
                 <div className="flex justify-between items-center pt-2 border-t border-stone-200">
                   <span className="text-stone-500">IBAN per Bonifici:</span>
@@ -396,13 +944,13 @@ export const PayPalPayoutSettings: React.FC = () => {
             </div>
           </div>
 
-          {/* Live Link Tester */}
+          {/* Live Link Tester PayPal */}
           <div className="p-6 bg-white rounded-2xl border border-stone-200 shadow-2xs space-y-4">
             <h4 className="font-editorial text-xl font-bold text-stone-900">
-              Testa il Link di Pagamento PayPal
+              Testa i Canali di Pagamento
             </h4>
             <p className="text-xs text-stone-600">
-              Verifica che il tuo link PayPal.Me funzioni correttamente aprendo una prova con quota pre-impostata.
+              Verifica che i tuoi canali di pagamento funzionino aprendo una quota di prova.
             </p>
 
             <div className="flex items-center gap-2">
@@ -421,25 +969,60 @@ export const PayPalPayoutSettings: React.FC = () => {
               ))}
             </div>
 
-            <a
-              href={testPayPalUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full py-2.5 px-4 bg-[#0070BA] hover:bg-[#005ea6] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2"
-            >
-              <span>Apri Link PayPal di Prova ({settings.currency}{testAmount})</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
+            <div className="space-y-2 pt-1">
+              {/* Apple Pay Test Button */}
+              <button
+                type="button"
+                onClick={() => setIsApplePayModalOpen(true)}
+                className="w-full py-2.5 px-4 bg-stone-950 hover:bg-black text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span className="text-base font-bold"></span>
+                <span>Testa Apple Pay ({settings.currency}{testAmount})</span>
+              </button>
+
+              {/* PayPal Test Link */}
+              <a
+                href={testPayPalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-2.5 px-4 bg-[#0070BA] hover:bg-[#005ea6] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2"
+              >
+                <span>Apri Link PayPal di Prova ({settings.currency}{testAmount})</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+
+            {testSuccessMessage && (
+              <div className="p-3 bg-emerald-50 text-emerald-800 rounded-xl text-xs font-semibold flex items-center gap-2 animate-in fade-in">
+                <Check className="w-4 h-4 text-emerald-600" />
+                <span>{testSuccessMessage}</span>
+              </div>
+            )}
 
             <div className="flex items-start gap-2 pt-2 text-[11px] text-stone-500">
               <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <span>
-                Zero trattenute di piattaforma: i fondi vanno direttamente al tuo PayPal con la massima sicurezza.
+                Zero trattenute di piattaforma: tutti i fondi vanno direttamente al tuo Stripe e PayPal con la massima sicurezza.
               </span>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Interactive Apple Pay Test Modal */}
+      <ApplePaySheet
+        isOpen={isApplePayModalOpen}
+        onClose={() => setIsApplePayModalOpen(false)}
+        amount={testAmount}
+        giftTitle="Prova Donazione Lista Nozze"
+        guestName="Sposi Test"
+        guestEmail="test@listanozze.it"
+        onSuccess={(piId) => {
+          setIsApplePayModalOpen(false);
+          setTestSuccessMessage(`Apple Pay test riuscito con successo! (ID Transazione: ${piId})`);
+          setTimeout(() => setTestSuccessMessage(null), 5000);
+        }}
+      />
     </div>
   );
 };

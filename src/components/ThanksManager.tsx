@@ -243,10 +243,16 @@ export const ThanksManager: React.FC = () => {
                         className={`text-[10px] font-bold px-2 py-0.5 rounded ${
                           don.paymentMethod === 'paypal'
                             ? 'bg-[#A6C1D8]/40 text-slate-800'
+                            : don.paymentMethod === 'apple_pay'
+                            ? 'bg-stone-900 text-white'
                             : 'bg-[#BCBF97]/30 text-[#484c2e]'
                         }`}
                       >
-                        {don.paymentMethod === 'paypal' ? 'PayPal' : 'Bonifico'}
+                        {don.paymentMethod === 'paypal'
+                          ? 'PayPal'
+                          : don.paymentMethod === 'apple_pay'
+                          ? ' Apple Pay'
+                          : 'Bonifico'}
                       </span>
 
                       {don.thankYouSent ? (

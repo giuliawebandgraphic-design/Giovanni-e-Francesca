@@ -1,6 +1,6 @@
 export type GiftCategory = 'honeymoon' | 'home' | 'experience' | 'tech' | 'custom';
 
-export type PaymentMethod = 'paypal' | 'bank_transfer';
+export type PaymentMethod = 'paypal' | 'bank_transfer' | 'apple_pay' | 'stripe';
 
 export type DonationStatus = 'completed' | 'pending_verification' | 'pledged';
 
@@ -32,6 +32,7 @@ export interface Donation {
   paymentMethod: PaymentMethod;
   status: DonationStatus;
   paypalTransactionId?: string;
+  stripePaymentIntentId?: string;
   message?: string;
   createdAt: string;
   thankYouSent: boolean;
@@ -67,4 +68,15 @@ export interface RegistrySettings {
   bankName: string;
   bankBic?: string;
   heroImage: string;
+  applePayEnabled?: boolean;
+  applePayRecipient?: string;
+  stripeEnabled?: boolean;
+  stripeAccountId?: string;
+  stripePublishableKey?: string;
+  stripeSecretKey?: string;
+  stripeConnectedAt?: string;
+  stripeAccountName?: string;
+  stripeMode?: 'test' | 'live';
+  stripeStatus?: 'connected' | 'pending' | 'disconnected';
+  applePayThroughStripe?: boolean;
 }

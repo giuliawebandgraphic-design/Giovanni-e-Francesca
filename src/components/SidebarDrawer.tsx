@@ -199,7 +199,7 @@ export const SidebarDrawer: React.FC = () => {
             >
               <div className="text-sm font-semibold">Gestisci Pagamenti</div>
               <div className={`text-xs mt-0.5 ${activeView === 'organizer_paypal' ? 'text-stone-200' : 'text-stone-500'}`}>
-                PayPal e coordinate IBAN
+                Stripe, Apple Pay, PayPal e IBAN
               </div>
             </button>
 

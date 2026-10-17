@@ -69,7 +69,7 @@ export const GuestRegistryView: React.FC = () => {
 
             <div className="flex items-center gap-2 text-xs text-stone-700 font-medium">
               <ShieldCheck className="w-4 h-4 text-[#696d48]" />
-              <span>Versamento diretto su PayPal & Bonifico</span>
+              <span>Versamento diretto su PayPal, Apple Pay & Bonifico</span>
             </div>
           </div>
         </div>
