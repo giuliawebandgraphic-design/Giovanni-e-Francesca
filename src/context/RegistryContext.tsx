@@ -634,11 +634,16 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const updateSettings = async (updates: Partial<RegistrySettings>): Promise<boolean> => {
-    const updatedSettings: RegistrySettings = { ...settings, ...updates };
-    setSettings(updatedSettings);
+    let targetSettings: RegistrySettings;
+    setSettings((prev) => {
+      targetSettings = { ...prev, ...updates };
+      return targetSettings;
+    });
+
+    targetSettings = targetSettings! || { ...settings, ...updates };
 
     try {
-      localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(updatedSettings));
+      localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(targetSettings));
       if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
         const channel = new BroadcastChannel('given2_live_sync');
         channel.postMessage({ type: 'SETTINGS_UPDATED' });
@@ -650,14 +655,14 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     let firestoreSuccess = false;
     try {
-      const sanitized = JSON.parse(JSON.stringify(updatedSettings));
+      const sanitized = JSON.parse(JSON.stringify(targetSettings));
       await setDoc(doc(db, 'registry', 'main'), { settings: sanitized, lastUpdated: Date.now() }, { merge: true });
       firestoreSuccess = true;
     } catch (err) {
       console.error('Error saving settings to Firestore:', err);
     }
 
-    pushSyncToServer({ settings: updatedSettings });
+    pushSyncToServer({ settings: targetSettings });
     return firestoreSuccess;
   };
 

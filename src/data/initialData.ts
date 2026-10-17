@@ -14,6 +14,17 @@ export const INITIAL_SETTINGS: RegistrySettings = {
   bankName: 'Intesa Sanpaolo - Filiale Verona Centro',
   bankBic: 'BCITITMM',
   heroImage: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80',
+  applePayEnabled: true,
+  applePayRecipient: 'giovanni.francesca.wedding@gmail.com',
+  stripeEnabled: false,
+  stripeEmail: 'giovanni.francesca.wedding@gmail.com',
+  stripeAccountId: '',
+  stripeAccountName: 'Giovanni & Francesca Wedding Fund',
+  stripePublishableKey: '',
+  stripeSecretKey: '',
+  stripeMode: 'test',
+  stripeStatus: 'disconnected',
+  applePayThroughStripe: true,
 };
 
 // Default state: 2 demo gifts visible so couples can review and customize

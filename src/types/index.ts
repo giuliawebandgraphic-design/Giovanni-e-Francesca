@@ -76,6 +76,7 @@ export interface RegistrySettings {
   stripeSecretKey?: string;
   stripeConnectedAt?: string;
   stripeAccountName?: string;
+  stripeEmail?: string;
   stripeMode?: 'test' | 'live';
   stripeStatus?: 'connected' | 'pending' | 'disconnected';
   applePayThroughStripe?: boolean;

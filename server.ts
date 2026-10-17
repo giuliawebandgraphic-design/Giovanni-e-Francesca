@@ -167,18 +167,24 @@ app.get('/api/stripe/status', (req: Request, res: Response) => {
 });
 
 app.post('/api/stripe/connect', (req: Request, res: Response) => {
-  const { accountId, publishableKey, secretKey, accountName, mode } = req.body;
+  const { accountId, publishableKey, secretKey, accountName, mode, email, stripeEmail } = req.body;
   const current = loadRegistry();
   const settings = current.settings || {};
+
+  const resolvedMode = mode || settings.stripeMode || 'test';
+  const defaultPub = resolvedMode === 'live' 
+    ? 'pk_live_51NvWeddingApplePayLive123' 
+    : 'pk_test_51NvSAMPLEWeddingApplePayKey123';
 
   const updatedSettings = {
     ...settings,
     stripeEnabled: true,
     stripeAccountId: accountId || settings.stripeAccountId || `acct_1Nv${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
     stripeAccountName: accountName || settings.stripeAccountName || `${settings.coupleNames || 'Sposi'} Wedding Fund`,
-    stripePublishableKey: publishableKey || settings.stripePublishableKey || 'pk_test_51NvSAMPLEWeddingApplePayKey123',
+    stripeEmail: stripeEmail || email || settings.stripeEmail || settings.paypalEmail || '',
+    stripePublishableKey: publishableKey || settings.stripePublishableKey || defaultPub,
     stripeSecretKey: secretKey || settings.stripeSecretKey || '',
-    stripeMode: mode || settings.stripeMode || 'test',
+    stripeMode: resolvedMode,
     stripeConnectedAt: new Date().toISOString(),
     stripeStatus: 'connected' as const,
     applePayThroughStripe: true,
@@ -205,6 +211,8 @@ app.post('/api/stripe/disconnect', (req: Request, res: Response) => {
     stripeSecretKey: '',
     stripeAccountId: '',
     stripeAccountName: '',
+    stripeEmail: '',
+    applePayThroughStripe: false,
   };
 
   const updated = {

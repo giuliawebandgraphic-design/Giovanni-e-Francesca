@@ -1,6 +1,6 @@
 {
-  "version": 5,
-  "lastModified": 1792226700532,
+  "version": 12,
+  "lastModified": 1792227995092,
   "settings": {
     "bankIban": "IT95Z0366901600067012713573",
     "eventTitle": "Il nostro Matrimonio",
@@ -17,14 +17,15 @@
     "applePayEnabled": true,
     "applePayRecipient": "giulia.ortuso@leitha.eu",
     "stripeEnabled": true,
-    "stripeAccountId": "acct_1NvL92LUQHR",
+    "stripeAccountId": "acct_1Nv8MAG8GQE",
     "stripeAccountName": "Giovanni & Francesca Wedding Fund",
     "stripePublishableKey": "pk_test_51NvSAMPLEWeddingApplePayKey123",
     "stripeSecretKey": "",
     "stripeMode": "test",
-    "stripeConnectedAt": "2026-10-17T08:45:00.532Z",
+    "stripeConnectedAt": "2026-10-17T09:06:35.092Z",
     "stripeStatus": "connected",
-    "applePayThroughStripe": true
+    "applePayThroughStripe": true,
+    "stripeEmail": "giovanni.francesca.wedding@gmail.com"
   },
   "gifts": [
     {
@@ -62,6 +63,35 @@
       "raisedAmount": 0
     }
   ],
-  "guests": [],
-  "donations": []
+  "guests": [
+    {
+      "id": "guest-1792226825792-z39",
+      "fullName": "giulia",
+      "email": "sagepaperdesign@gmail.com",
+      "phone": "",
+      "group": "Amici Sposo",
+      "rsvpStatus": "attending",
+      "totalDonated": 50,
+      "donationsCount": 1,
+      "thankYouSent": false,
+      "avatarColor": "bg-teal-600"
+    }
+  ],
+  "donations": [
+    {
+      "id": "don-1792226825792",
+      "guestId": "guest-1792226825792-z39",
+      "guestName": "giulia",
+      "guestEmail": "sagepaperdesign@gmail.com",
+      "giftId": "gift-1792078308636",
+      "giftTitle": "Berkel – Red Line 250",
+      "amount": 50,
+      "paymentMethod": "apple_pay",
+      "status": "completed",
+      "stripePaymentIntentId": "pi_test_1792226823580_6qgwmc",
+      "message": "fdfdg",
+      "createdAt": "2026-10-17T08:47:05.792Z",
+      "thankYouSent": false
+    }
+  ]
 }
