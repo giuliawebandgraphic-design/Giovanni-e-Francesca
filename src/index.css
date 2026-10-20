@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: 'Montserrat', sans-serif;
+  --font-sans: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-editorial: 'Montserrat', sans-serif;
+  --color-dash-gold: #FFE68A;
+  --color-dash-blue: #A6C1D8;
+  --color-dash-sage: #BCBF97;
+}
+
+@layer base {
+  *, ::before, ::after {
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  body {
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #faf9f6;
+    color: #1c1917;
+  }
+  
+  h1, h2, h3, h4, h5, h6, .font-editorial, input, button, textarea, select {
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+}

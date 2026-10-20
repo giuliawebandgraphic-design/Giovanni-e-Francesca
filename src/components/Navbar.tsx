@@ -1,0 +1,91 @@
+import React from 'react';
+import { useRegistry } from '../context/RegistryContext';
+import { Menu, X } from 'lucide-react';
+
+export const Navbar: React.FC = () => {
+  const { activeView, setActiveView, settings, donations, toggleSidebar, isSidebarOpen } = useRegistry();
+
+  const pendingThankYous = donations.filter((d) => !d.thankYouSent).length;
+
+  const viewTitles: Record<string, string> = {
+    guest_registry: 'Lista Regali (Vista Invitati)',
+    embed_view: 'Anteprima Embed (Senza Menù)',
+    organizer_dashboard: 'Dashboard Sposi',
+    organizer_gifts: 'Gestisci Lista',
+    organizer_paypal: 'Gestisci Pagamenti',
+    organizer_thanks: 'Gestisci Ringraziamenti',
+    organizer_stats: 'Statistiche',
+    organizer_guests: 'Rubrica Invitati',
+    organizer_embed: 'Codice per il Sito',
+    organizer_image: 'Immagine della Home',
+  };
+
+  const currentViewTitle = viewTitles[activeView] || 'Lista Nozze';
+
+  return (
+    <header className="sticky top-0 z-40 bg-stone-50/95 backdrop-blur-md border-b border-stone-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Left: Menu button + Couple Names */}
+          <div className="flex items-center gap-3 sm:gap-4">
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-stone-800 hover:text-stone-950 bg-white hover:bg-stone-100 border border-stone-300 shadow-2xs transition-colors cursor-pointer"
+              title="Apri menù laterale a scomparsa con tutte le sezioni"
+              aria-label="Apri menù laterale a scomparsa"
+            >
+              {isSidebarOpen ? (
+                <X className="w-5 h-5 text-[#636842]" />
+              ) : (
+                <Menu className="w-5 h-5 text-[#636842]" />
+              )}
+              <span className="text-xs font-bold text-stone-900 tracking-wide uppercase">
+                Menù
+              </span>
+            </button>
+
+            <div className="flex items-center gap-2 sm:gap-2.5">
+              <span className="text-xs sm:text-sm font-semibold tracking-normal text-stone-900">
+                {settings.coupleNames}
+              </span>
+            </div>
+          </div>
+
+          {/* Right: Quick Switcher & Active Section */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Quick access button to Dashboard when on guest view */}
+            {activeView !== 'organizer_dashboard' ? (
+              <button
+                type="button"
+                onClick={() => setActiveView('organizer_dashboard')}
+                className="px-3 py-1.5 bg-[#636842] hover:bg-[#525636] text-white text-xs font-semibold rounded-xl shadow-2xs transition-colors cursor-pointer flex items-center gap-1.5"
+              >
+                <span>Dashboard Sposi</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setActiveView('embed_view')}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-stone-100 text-stone-800 border border-stone-300 text-xs font-semibold rounded-xl shadow-2xs transition-colors cursor-pointer"
+              >
+                <span>Anteprima Lista</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-stone-800 hover:text-stone-950 bg-[#BCBF97]/25 hover:bg-[#BCBF97]/40 border border-[#BCBF97] rounded-xl transition-all shadow-2xs cursor-pointer"
+              title="Apri tutte le voci del pannello sposi"
+            >
+              <span className="hidden xs:inline">Tutte le Voci</span>
+              <span className="xs:hidden">Sezioni</span>
+              <span className="text-stone-400">&rarr;</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
