@@ -84,6 +84,22 @@ const STORAGE_KEYS = {
   SETTINGS: 'given2_settings_clean_v1',
 };
 
+const stripeConnectionSettings = (source: Partial<RegistrySettings>): Partial<RegistrySettings> => {
+  const values = {
+    stripeAccountId: source.stripeAccountId,
+    stripeAccountName: source.stripeAccountName,
+    stripeEmail: source.stripeEmail,
+    stripeStatus: source.stripeStatus,
+    stripeEnabled: source.stripeEnabled,
+    applePayEnabled: source.applePayEnabled,
+    applePayThroughStripe: source.applePayThroughStripe,
+  };
+
+  return Object.fromEntries(
+    Object.entries(values).filter(([, value]) => value !== undefined),
+  ) as Partial<RegistrySettings>;
+};
+
 const AVATAR_COLORS = [
   'bg-emerald-600',
   'bg-rose-600',
@@ -143,6 +159,11 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (params.get('embed') === 'true' || params.get('mode') === 'embed') {
           return 'embed_view';
         }
+        // Stripe Checkout always returns guests to the public registry, even
+        // when their browser has no previously saved application view.
+        if (params.has('stripe_checkout') || params.get('view') === 'guest') {
+          return 'guest_registry';
+        }
         const savedView = sessionStorage.getItem('given2_active_view');
         if (savedView) {
           return savedView as AppView;
@@ -161,6 +182,10 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const isInitialFirestoreLoadDoneRef = React.useRef<boolean>(false);
   const isRemoteUpdatingRef = React.useRef<boolean>(false);
   const serverVersionRef = React.useRef<number>(1);
+  // Stripe callbacks update the server, while the rest of the registry is
+  // synchronized through Firestore. Keep this subset authoritative so a stale
+  // Firebase snapshot cannot hide a successfully connected Stripe account.
+  const authoritativeStripeSettingsRef = React.useRef<Partial<RegistrySettings> | null>(null);
 
   // Helper to push state changes to Firebase Firestore Cloud
   const pushSyncToFirestore = async (payload: {
@@ -233,9 +258,10 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             } catch {}
           }
           if (cloudData.settings && typeof cloudData.settings === 'object') {
-            setSettings((prev) => ({ ...prev, ...cloudData.settings }));
+            const mergedSettings = { ...cloudData.settings, ...authoritativeStripeSettingsRef.current };
+            setSettings((prev) => ({ ...prev, ...mergedSettings }));
             try {
-              localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(cloudData.settings));
+              localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(mergedSettings));
             } catch {}
           }
           setTimeout(() => {
@@ -259,7 +285,10 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setGifts(data.gifts);
         if (Array.isArray(data.guests)) setGuests(data.guests);
         if (Array.isArray(data.donations)) setDonations(data.donations);
-        if (data.settings && typeof data.settings === 'object') setSettings((prev) => ({ ...prev, ...data.settings }));
+        if (data.settings && typeof data.settings === 'object') {
+          const mergedSettings = { ...data.settings, ...authoritativeStripeSettingsRef.current };
+          setSettings((prev) => ({ ...prev, ...mergedSettings }));
+        }
         setTimeout(() => {
           isRemoteUpdatingRef.current = false;
         }, 100);
@@ -305,9 +334,10 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               } catch {}
             }
             if (cloudData.settings && typeof cloudData.settings === 'object') {
-              setSettings((prev) => ({ ...prev, ...cloudData.settings }));
+              const mergedSettings = { ...cloudData.settings, ...authoritativeStripeSettingsRef.current };
+              setSettings((prev) => ({ ...prev, ...mergedSettings }));
               try {
-                localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(cloudData.settings));
+                localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(mergedSettings));
               } catch {}
             }
 
@@ -366,6 +396,39 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       unsubscribe();
       if (channel) channel.close();
     };
+  }, []);
+
+  // Reconcile the Stripe state for every view, including the public guest
+  // page. This means guests can see the card-payment option immediately after
+  // the couple completes Stripe onboarding, even before Firebase refreshes.
+  useEffect(() => {
+    let cancelled = false;
+
+    const reconcileStripeConnection = async () => {
+      try {
+        const response = await fetch('/api/stripe-connect/registry-status', { cache: 'no-store' });
+        if (!response.ok) return;
+        const remote = await response.json() as Partial<RegistrySettings>;
+        const remoteStripeSettings = stripeConnectionSettings(remote);
+        if (cancelled || !remoteStripeSettings.stripeAccountId) return;
+
+        authoritativeStripeSettingsRef.current = remoteStripeSettings;
+        setSettings((prev) => ({ ...prev, ...remoteStripeSettings }));
+        try {
+          localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify({ ...settings, ...remoteStripeSettings }));
+          await setDoc(doc(db, 'registry', 'main'), { settings: remoteStripeSettings, lastUpdated: Date.now() }, { merge: true });
+        } catch {
+          // The server remains the source of truth if the browser cannot write to Firebase.
+        }
+      } catch {
+        // Stripe is optional; offline pages keep using the cached registry settings.
+      }
+    };
+
+    void reconcileStripeConnection();
+    return () => { cancelled = true; };
+    // Run once: subsequent real-time changes are handled by the Firestore listener.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Sync to local storage, push to server & save to Firestore whenever state changes
@@ -641,6 +704,14 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
 
     targetSettings = targetSettings! || { ...settings, ...updates };
+
+    const updatedStripeSettings = stripeConnectionSettings(updates);
+    if (Object.keys(updatedStripeSettings).length > 0) {
+      authoritativeStripeSettingsRef.current = {
+        ...authoritativeStripeSettingsRef.current,
+        ...updatedStripeSettings,
+      };
+    }
 
     try {
       localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(targetSettings));

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { GiftItem, PaymentMethod, Guest } from '../types';
 import { useRegistry } from '../context/RegistryContext';
-import { X, Check, CreditCard, Heart, ArrowRight, Copy, CheckCircle2, ShieldCheck, Sparkles, ExternalLink, Zap } from 'lucide-react';
-import { ApplePaySheet } from './ApplePaySheet';
+import { X, Check, CreditCard, Heart, ArrowRight, Copy, CheckCircle2, ShieldCheck, Sparkles, Zap } from 'lucide-react';
+import { ExpressCheckoutButton } from '@mdf/stripe-express-connect';
 
 interface ContributeModalProps {
   gift: GiftItem | null;
@@ -15,7 +15,7 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
   onClose,
   defaultGuestId,
 }) => {
-  const { settings, guests, recordDonation, getPayPalLink } = useRegistry();
+  const { settings, guests, recordDonation } = useRegistry();
 
   if (!gift) return null;
 
@@ -38,18 +38,14 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
   const [guestGroup, setGuestGroup] = useState<Guest['group']>('Amici Sposo');
   const [message, setMessage] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
-    settings.applePayEnabled !== false ? 'apple_pay' : 'paypal'
+    settings.stripeEnabled ? 'stripe' : 'bank_transfer'
   );
 
   const [step, setStep] = useState<'amount_and_info' | 'payment_process' | 'success'>('amount_and_info');
   const [referenceCode] = useState<string>(() => `G2-${Math.floor(10000 + Math.random() * 90000)}`);
   const [copiedIban, setCopiedIban] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [isApplePaySheetOpen, setIsApplePaySheetOpen] = useState<boolean>(false);
-  const [cardNumber, setCardNumber] = useState<string>('4242 4242 4242 4242');
-  const [cardExpiry, setCardExpiry] = useState<string>('12/28');
-  const [cardCvc, setCardCvc] = useState<string>('123');
-  const [isProcessingStripeCard, setIsProcessingStripeCard] = useState<boolean>(false);
+  const [stripeCheckoutError, setStripeCheckoutError] = useState<string | null>(null);
 
   const activeAmount = Number(customAmount) || 0;
 
@@ -71,78 +67,6 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
     if (guestMode === 'existing' && !selectedExistingGuestId) return;
 
     setStep('payment_process');
-  };
-
-  const handleApplePaySuccess = (paymentIntentId: string) => {
-    recordDonation({
-      guestId: guestMode === 'existing' ? selectedExistingGuestId : undefined,
-      guestName: guestName.trim(),
-      guestEmail: guestEmail.trim(),
-      guestPhone: guestPhone.trim(),
-      guestGroup: guestGroup,
-      giftId: gift.id,
-      amount: activeAmount,
-      paymentMethod: 'apple_pay',
-      stripePaymentIntentId: paymentIntentId,
-      message: message.trim(),
-      status: 'completed',
-    });
-    setIsApplePaySheetOpen(false);
-    setStep('success');
-  };
-
-  const handleCardPayment = async () => {
-    setIsProcessingStripeCard(true);
-    try {
-      const res = await fetch('/api/stripe/create-payment-intent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: activeAmount,
-          currency: 'eur',
-          giftTitle: gift.title,
-          guestName: guestName.trim(),
-          guestEmail: guestEmail.trim(),
-          paymentMethod: 'stripe',
-        }),
-      });
-      const data = await res.json();
-      const piId = data.paymentIntentId || `pi_card_${Date.now()}`;
-
-      recordDonation({
-        guestId: guestMode === 'existing' ? selectedExistingGuestId : undefined,
-        guestName: guestName.trim(),
-        guestEmail: guestEmail.trim(),
-        guestPhone: guestPhone.trim(),
-        guestGroup: guestGroup,
-        giftId: gift.id,
-        amount: activeAmount,
-        paymentMethod: 'stripe',
-        stripePaymentIntentId: piId,
-        message: message.trim(),
-        status: 'completed',
-      });
-
-      setIsProcessingStripeCard(false);
-      setStep('success');
-    } catch (err) {
-      console.error('Error processing card:', err);
-      setIsProcessingStripeCard(false);
-      recordDonation({
-        guestId: guestMode === 'existing' ? selectedExistingGuestId : undefined,
-        guestName: guestName.trim(),
-        guestEmail: guestEmail.trim(),
-        guestPhone: guestPhone.trim(),
-        guestGroup: guestGroup,
-        giftId: gift.id,
-        amount: activeAmount,
-        paymentMethod: 'stripe',
-        stripePaymentIntentId: `pi_sim_${Date.now()}`,
-        message: message.trim(),
-        status: 'completed',
-      });
-      setStep('success');
-    }
   };
 
   const handleCompleteContribution = () => {
@@ -171,7 +95,15 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
     setTimeout(() => setCopiedIban(false), 2000);
   };
 
-  const payPalUrl = getPayPalLink(activeAmount, referenceCode, gift.title);
+  const stripeCheckoutMetadata = {
+    giftId: gift.id,
+    guestId: guestMode === 'existing' ? selectedExistingGuestId : '',
+    guestName: guestName.trim(),
+    guestEmail: guestEmail.trim(),
+    guestPhone: guestPhone.trim(),
+    guestGroup,
+    message: message.trim(),
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs overflow-y-auto">
@@ -357,7 +289,7 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
             </form>
           )}
 
-          {/* STEP 2: Scegli metodo di versamento (PayPal, Bonifico, Contanti) */}
+          {/* STEP 2: Scegli metodo di versamento */}
           {step === 'payment_process' && (
             <div className="space-y-6">
               <div className="p-4 bg-stone-50 rounded-xl border border-stone-200">
@@ -383,43 +315,8 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
                   Seleziona come desideri effettuare il versamento:
                 </label>
                 <div className="space-y-3">
-                  {/* Apple Pay option */}
-                  {settings.applePayEnabled !== false && (
-                    <label
-                      className={`block p-4 rounded-xl border transition-all cursor-pointer ${
-                        paymentMethod === 'apple_pay'
-                          ? 'border-stone-900 bg-stone-50 ring-2 ring-stone-900'
-                          : 'border-stone-200 bg-white hover:bg-stone-50'
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <input
-                          type="radio"
-                          name="paymentMethod"
-                          value="apple_pay"
-                          checked={paymentMethod === 'apple_pay'}
-                          onChange={() => setPaymentMethod('apple_pay')}
-                          className="mt-1 text-stone-900 focus:ring-stone-900"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <span className="font-semibold text-stone-900 text-sm flex items-center gap-1.5">
-                              <span>Apple Pay (tramite Stripe)</span>
-                            </span>
-                            <span className="text-[11px] font-bold text-white bg-black px-2.5 py-0.5 rounded shadow-2xs font-sans">
-                              Pay 1-Tap
-                            </span>
-                          </div>
-                          <p className="text-xs text-stone-600 mt-1">
-                            Paga all'istante con Face ID o Touch ID da iPhone, iPad o Mac. Accredito sicuro Stripe.
-                          </p>
-                        </div>
-                      </div>
-                    </label>
-                  )}
-
                   {/* Stripe Card option */}
-                  <label
+                  {settings.stripeEnabled && <label
                     className={`block p-4 rounded-xl border transition-all cursor-pointer ${
                       paymentMethod === 'stripe'
                         ? 'border-emerald-700 bg-emerald-50/40 ring-1 ring-emerald-600'
@@ -450,41 +347,7 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
                         </p>
                       </div>
                     </div>
-                  </label>
-
-                  {/* PayPal option */}
-                  <label
-                    className={`block p-4 rounded-xl border transition-all cursor-pointer ${
-                      paymentMethod === 'paypal'
-                        ? 'border-blue-600 bg-blue-50/40 ring-1 ring-blue-500'
-                        : 'border-stone-200 bg-white hover:bg-stone-50'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="paypal"
-                        checked={paymentMethod === 'paypal'}
-                        onChange={() => setPaymentMethod('paypal')}
-                        className="mt-1 text-blue-600 focus:ring-blue-500"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <span className="font-semibold text-stone-900 text-sm">
-                            Versamento diretto su Conto PayPal
-                          </span>
-                          <span className="text-[11px] font-bold text-slate-800 bg-[#A6C1D8] px-2 py-0.5 rounded">
-                            Istantaneo
-                          </span>
-                        </div>
-                        <p className="text-xs text-stone-600 mt-1">
-                          Invia l'importo direttamente al conto PayPal degli sposi (
-                          <strong className="text-stone-800">{settings.paypalEmail}</strong>).
-                        </p>
-                      </div>
-                    </div>
-                  </label>
+                  </label>}
 
                   {/* Bank Transfer option */}
                   <label
@@ -517,131 +380,39 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
               </div>
 
               {/* Method-specific instructions box */}
-              {paymentMethod === 'apple_pay' && (
-                <div className="p-5 bg-stone-950 text-white rounded-2xl space-y-4 shadow-xl border border-stone-800">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-xs font-semibold">
-                      <span className="text-xl font-bold font-sans">Pay</span>
-                      <span>Pagamento Istantaneo Apple Pay</span>
-                    </div>
-                    <span className="text-[10px] bg-white/20 text-stone-200 px-2 py-0.5 rounded-md font-mono">
-                      Stripe Protected
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-stone-300 leading-relaxed">
-                    Versa la tua quota di <strong>{settings.currency}{activeAmount}</strong> per <em>"{gift.title}"</em> in 1 secondo con Touch ID o Face ID.
-                  </p>
-
-                  <button
-                    type="button"
-                    onClick={() => setIsApplePaySheetOpen(true)}
-                    className="w-full py-4 px-6 bg-white hover:bg-stone-100 active:scale-[0.99] text-stone-950 font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2.5 cursor-pointer"
-                  >
-                    <span className="text-xl leading-none"></span>
-                    <span>Paga con Apple Pay · {settings.currency}{activeAmount}</span>
-                  </button>
-
-                  <div className="flex items-center justify-center gap-2 text-[11px] text-stone-400 pt-1">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Transazione autorizzata tramite Stripe Connect · Accredito diretto agli sposi</span>
-                  </div>
-                </div>
-              )}
-
               {paymentMethod === 'stripe' && (
                 <div className="p-5 bg-stone-50 rounded-2xl border border-stone-200 space-y-4 shadow-xs">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs font-bold text-stone-900">
                       <CreditCard className="w-4 h-4 text-emerald-700" />
-                      <span>Dati Carta di Credito / Debito</span>
+                      <span>Checkout sicuro Stripe</span>
                     </div>
                     <span className="text-[10px] font-mono text-stone-500 bg-white px-2 py-0.5 rounded border border-stone-200">
                       Stripe TLS 256-bit
                     </span>
                   </div>
 
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-[11px] font-semibold text-stone-700 mb-1">
-                        Numero Carta
-                      </label>
-                      <input
-                        type="text"
-                        value={cardNumber}
-                        onChange={(e) => setCardNumber(e.target.value)}
-                        placeholder="4242 •••• •••• 4242"
-                        className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-stone-900 text-xs font-mono font-medium focus:outline-none focus:ring-1 focus:ring-stone-900"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[11px] font-semibold text-stone-700 mb-1">
-                          Scadenza (MM/AA)
-                        </label>
-                        <input
-                          type="text"
-                          value={cardExpiry}
-                          onChange={(e) => setCardExpiry(e.target.value)}
-                          placeholder="12/28"
-                          className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-stone-900 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-stone-900"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-semibold text-stone-700 mb-1">
-                          CVC / CVV
-                        </label>
-                        <input
-                          type="password"
-                          maxLength={4}
-                          value={cardCvc}
-                          onChange={(e) => setCardCvc(e.target.value)}
-                          placeholder="•••"
-                          className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-stone-900 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-stone-900"
-                        />
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={handleCardPayment}
-                      disabled={isProcessingStripeCard}
-                      className="w-full mt-2 py-3 px-5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      {isProcessingStripeCard ? (
-                        <span>Elaborazione pagamento Stripe...</span>
-                      ) : (
-                        <>
-                          <ShieldCheck className="w-4 h-4" />
-                          <span>Paga {settings.currency}{activeAmount} con Carta (Stripe)</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
+                  <p className="text-xs text-stone-600 leading-relaxed">
+                    I dati della carta non transitano dal sito: Stripe gestisce il pagamento e accredita il contributo direttamente sul conto degli sposi.
+                  </p>
+                  <ExpressCheckoutButton
+                    accountId={settings.stripeAccountId || 'connected-account'}
+                    amount={activeAmount}
+                    currency="eur"
+                    metadata={stripeCheckoutMetadata}
+                    onError={(error) => setStripeCheckoutError(error.message)}
+                    className="w-full py-3 px-5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Vai al Checkout Stripe · {settings.currency}{activeAmount}</span>
+                  </ExpressCheckoutButton>
                 </div>
               )}
 
-              {paymentMethod === 'paypal' && (
-                <div className="p-4 bg-sky-50 rounded-xl border border-sky-100 space-y-3">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-sky-900">
-                    <ShieldCheck className="w-4 h-4 text-sky-700" />
-                    <span>Istruzioni Pagamento PayPal:</span>
-                  </div>
-                  <p className="text-xs text-sky-800 leading-relaxed">
-                    Cliccando sul pulsante qui sotto, si aprirà il link sicuro di PayPal per inviare esattamente{' '}
-                    <strong>{settings.currency}{activeAmount}</strong> a <strong>@{settings.paypalMeUsername}</strong> con riferimento <strong>{referenceCode}</strong>.
-                  </p>
-                  <a
-                    href={payPalUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-[#0070BA] hover:bg-[#005ea6] text-white text-xs font-bold rounded-lg shadow-sm transition-colors"
-                  >
-                    <span>Apri PayPal per inviare {settings.currency}{activeAmount}</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                </div>
+              {stripeCheckoutError && (
+                <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-800">
+                  {stripeCheckoutError}
+                </p>
               )}
 
               {paymentMethod === 'bank_transfer' && (
@@ -755,17 +526,6 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
           )}
         </div>
       </div>
-
-      {/* Apple Pay Native Sheet Modal */}
-      <ApplePaySheet
-        isOpen={isApplePaySheetOpen}
-        onClose={() => setIsApplePaySheetOpen(false)}
-        amount={activeAmount}
-        giftTitle={gift.title}
-        guestName={guestName.trim() || 'Invitato'}
-        guestEmail={guestEmail.trim() || 'invitato@example.com'}
-        onSuccess={handleApplePaySuccess}
-      />
     </div>
   );
 };

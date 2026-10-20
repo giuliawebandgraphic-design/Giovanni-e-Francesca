@@ -79,7 +79,7 @@ const MainContent: React.FC = () => {
               {settings.coupleNames}
             </span>
             <span aria-hidden="true">·</span>
-            <span>Lista Nozze & Desideri con Versamento PayPal</span>
+            <span>Lista Nozze & Desideri</span>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 text-xs">

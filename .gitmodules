@@ -1,0 +1,3 @@
+[submodule "stripe-express-connect"]
+	path = stripe-express-connect
+	url = git@github.com:marcodefelice/stripe-express-connect.git

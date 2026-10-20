@@ -1,7 +1,14 @@
 import express, { Request, Response } from 'express';
+import 'dotenv/config';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import Stripe from 'stripe';
+import {
+  createStripeExpressConnectRouter,
+  createStripeWebhookHandler,
+  type CheckoutPayload,
+} from './stripe-express-connect/src/server/index.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -9,6 +16,11 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const DATA_FILE = path.resolve(__dirname, 'data', 'registry.json');
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
+const APP_URL = (process.env.APP_URL || `http://localhost:${PORT}`).replace(/\/$/, '');
+const WEDDING_FUND_GIFT_ID = 'wedding-fund';
+const WEDDING_FUND_TITLE = 'Contributo libero per gli sposi';
 
 // Ensure data directory exists
 const dataDir = path.dirname(DATA_FILE);
@@ -75,6 +87,98 @@ function saveRegistry(data: any) {
     console.error('Error writing registry.json:', err);
     throw err;
   }
+}
+
+function saveStripeDonation(session: Stripe.Checkout.Session) {
+  if (session.payment_status !== 'paid') return;
+
+  const current = loadRegistry();
+  const metadata = session.metadata || {};
+  const paymentIntentId = typeof session.payment_intent === 'string' ? session.payment_intent : session.id;
+  const donations = Array.isArray(current.donations) ? current.donations : [];
+
+  // Webhooks may be retried by Stripe: the PaymentIntent is our idempotency key.
+  if (donations.some((donation: any) => donation.stripePaymentIntentId === paymentIntentId)) return;
+
+  const amount = (session.amount_total || 0) / 100;
+  const gift = (current.gifts || []).find((item: any) => item.id === metadata.giftId);
+  const isWeddingFund = metadata.giftId === WEDDING_FUND_GIFT_ID;
+  if ((!gift && !isWeddingFund) || amount <= 0) {
+    console.warn('Ignoring Stripe checkout with incomplete registry metadata', { sessionId: session.id });
+    return;
+  }
+
+  const guestEmail = metadata.guestEmail || session.customer_details?.email || '';
+  const guestName = metadata.guestName || session.customer_details?.name || 'Invitato';
+  const requestedGuestId = metadata.guestId;
+  let guest = (current.guests || []).find((item: any) => item.id === requestedGuestId)
+    || (current.guests || []).find((item: any) => item.email?.toLowerCase() === guestEmail.toLowerCase());
+
+  if (guest) {
+    guest = {
+      ...guest,
+      totalDonated: Number(guest.totalDonated || 0) + amount,
+      donationsCount: Number(guest.donationsCount || 0) + 1,
+      rsvpStatus: guest.rsvpStatus === 'pending' ? 'attending' : guest.rsvpStatus,
+    };
+    current.guests = current.guests.map((item: any) => item.id === guest.id ? guest : item);
+  } else {
+    guest = {
+      id: `guest-stripe-${session.id}`,
+      fullName: guestName,
+      email: guestEmail,
+      phone: metadata.guestPhone || '',
+      group: metadata.guestGroup || 'Altri',
+      rsvpStatus: 'attending',
+      totalDonated: amount,
+      donationsCount: 1,
+      thankYouSent: false,
+      avatarColor: 'bg-[#A6C1D8]',
+    };
+    current.guests = [guest, ...(current.guests || [])];
+  }
+
+  current.donations = [{
+    id: `don-stripe-${session.id}`,
+    guestId: guest.id,
+    guestName: guest.fullName,
+    guestEmail: guest.email,
+    giftId: isWeddingFund ? WEDDING_FUND_GIFT_ID : gift.id,
+    giftTitle: isWeddingFund ? WEDDING_FUND_TITLE : gift.title,
+    amount,
+    paymentMethod: 'stripe',
+    status: 'completed',
+    stripePaymentIntentId: paymentIntentId,
+    stripeCheckoutSessionId: session.id,
+    message: metadata.message || '',
+    createdAt: new Date().toISOString(),
+    thankYouSent: false,
+  }, ...donations];
+
+  if (gift) {
+    const giftDonations = current.donations.filter((donation: any) => donation.giftId === gift.id && donation.status === 'completed');
+    const raisedAmount = giftDonations.reduce((total: number, donation: any) => total + Number(donation.amount || 0), 0);
+    current.gifts = current.gifts.map((item: any) => item.id === gift.id ? {
+      ...item,
+      raisedAmount,
+      contributionsCount: giftDonations.length,
+      status: !item.isInfiniteQuota && item.targetAmount > 0 && raisedAmount >= item.targetAmount ? 'completed' : item.status,
+    } : item);
+  }
+
+  saveRegistry(current);
+}
+
+if (STRIPE_SECRET_KEY && STRIPE_WEBHOOK_SECRET) {
+  app.post(
+    '/api/stripe-webhook',
+    express.raw({ type: 'application/json' }),
+    createStripeWebhookHandler({
+      stripeSecretKey: STRIPE_SECRET_KEY,
+      webhookSecret: STRIPE_WEBHOOK_SECRET,
+      onCheckoutCompleted: async (session) => saveStripeDonation(session),
+    }),
+  );
 }
 
 // Middleware: allow large payloads (e.g. uploaded images from local device)
@@ -146,6 +250,131 @@ app.get('/api/registry/events', (req: Request, res: Response) => {
   });
 });
 
+// Stripe Connect Express: the platform key stays on the server; the couple only
+// ever receives Stripe-hosted onboarding and the guest only sees Stripe Checkout.
+if (STRIPE_SECRET_KEY) {
+  const stripe = new Stripe(STRIPE_SECRET_KEY);
+
+  // Stripe onboarding updates the server-side registry after Stripe redirects
+  // back here. Firestore cannot be updated from this callback, so the client
+  // uses this small endpoint to reconcile its cached/Firebase state.
+  app.get('/api/stripe-connect/registry-status', (_req: Request, res: Response) => {
+    const settings = loadRegistry().settings || {};
+    const connected = settings.stripeStatus === 'connected' && settings.stripeEnabled === true;
+
+    res.json({
+      stripeAccountId: settings.stripeAccountId || '',
+      stripeAccountName: settings.stripeAccountName || '',
+      stripeEmail: settings.stripeEmail || '',
+      stripeStatus: connected ? 'connected' : (settings.stripeStatus || 'disconnected'),
+      stripeEnabled: connected,
+      applePayEnabled: connected,
+      applePayThroughStripe: connected,
+    });
+  });
+
+  // Do not trust an account ID sent by the browser when resuming onboarding.
+  app.use('/api/stripe-connect', (req, _res, next) => {
+    if (req.method === 'POST' && req.path === '/onboard') {
+      const settings = loadRegistry().settings || {};
+      const canResumeOnboarding = Boolean(
+        settings.stripeAccountId &&
+        (settings.stripeStatus === 'pending' || settings.stripeStatus === 'connected')
+      );
+      req.body = {
+        ...req.body,
+        // A disconnected registry starts a new Express account. This prevents
+        // stale/demo acct_ IDs from ever being sent to Stripe again.
+        accountId: canResumeOnboarding ? settings.stripeAccountId : undefined,
+        email: settings.stripeEmail || req.body?.email || undefined,
+      };
+    }
+    next();
+  });
+
+  app.use('/api/stripe-connect', createStripeExpressConnectRouter({
+    stripeSecretKey: STRIPE_SECRET_KEY,
+    onboarding: {
+      refreshUrl: `${APP_URL}/api/stripe-connect/refresh`,
+      returnUrl: `${APP_URL}/api/stripe-connect/return`,
+    },
+    checkout: {
+      successUrl: `${APP_URL}/?stripe_checkout=success`,
+      cancelUrl: `${APP_URL}/?stripe_checkout=cancelled`,
+    },
+    onAccountCreated: async (account, request) => {
+      const current = loadRegistry();
+      const email = typeof request.body?.email === 'string' ? request.body.email : current.settings?.stripeEmail || '';
+      current.settings = {
+        ...current.settings,
+        stripeAccountId: account.id,
+        stripeEmail: email,
+        stripeAccountName: current.settings?.coupleNames || 'Lista nozze',
+        stripeEnabled: false,
+        stripeStatus: 'pending',
+        stripeConnectedAt: new Date().toISOString(),
+      };
+      saveRegistry(current);
+    },
+    resolveAccountId: () => loadRegistry().settings?.stripeAccountId || null,
+    validateCheckout: (_request, payload: CheckoutPayload) => {
+      const current = loadRegistry();
+      const giftId = payload.metadata?.giftId;
+      const gift = (current.gifts || []).find((item: any) => item.id === giftId);
+      const isWeddingFund = giftId === WEDDING_FUND_GIFT_ID;
+      const amount = Number(payload.amount);
+      if (!gift && !isWeddingFund) throw new Error('Regalo non disponibile. Riapri la lista e riprova.');
+      if (!Number.isFinite(amount) || amount < 0.5) throw new Error('L’importo deve essere almeno 0,50.');
+
+      return {
+        amount,
+        currency: 'eur',
+        title: isWeddingFund ? WEDDING_FUND_TITLE : `Regalo nozze: ${gift.title}`,
+        description: `Contributo per ${current.settings?.coupleNames || 'gli sposi'}`,
+        metadata: {
+          giftId: gift.id,
+          guestId: payload.metadata?.guestId || '',
+          guestName: payload.metadata?.guestName || '',
+          guestEmail: payload.metadata?.guestEmail || '',
+          guestPhone: payload.metadata?.guestPhone || '',
+          guestGroup: payload.metadata?.guestGroup || 'Altri',
+          message: payload.metadata?.message || '',
+        },
+      };
+    },
+  }));
+
+  const finishOnboarding = async (req: Request, res: Response) => {
+    const current = loadRegistry();
+    const accountId = current.settings?.stripeAccountId;
+    if (!accountId) return res.redirect('/?stripe_connect=missing-account');
+
+    try {
+      const account = await stripe.v2.core.accounts.retrieve(accountId) as any;
+      const connected = (account.requirements?.currently_due ?? []).length === 0;
+      current.settings = {
+        ...current.settings,
+        stripeEnabled: connected,
+        stripeStatus: connected ? 'connected' : 'pending',
+        applePayThroughStripe: connected,
+        applePayEnabled: connected,
+      };
+      saveRegistry(current);
+      return res.redirect(`/?stripe_connect=${connected ? 'complete' : 'pending'}`);
+    } catch (error) {
+      console.error('Unable to refresh Stripe Connect account status:', error);
+      return res.redirect('/?stripe_connect=error');
+    }
+  };
+
+  app.get('/api/stripe-connect/return', finishOnboarding);
+  app.get('/api/stripe-connect/refresh', finishOnboarding);
+} else {
+  app.use('/api/stripe-connect', (_req, res) => {
+    res.status(503).json({ error: 'Stripe Connect non è configurato sul server. Imposta STRIPE_SECRET_KEY.' });
+  });
+}
+
 // 5. Stripe Integration APIs (Apple Pay & Credit Cards)
 app.get('/api/stripe/status', (req: Request, res: Response) => {
   const data = loadRegistry();
@@ -164,39 +393,6 @@ app.get('/api/stripe/status', (req: Request, res: Response) => {
     applePayEnabled: settings.applePayEnabled !== false && settings.stripeEnabled !== false,
     hasServerSecretKey: hasEnvSecret || hasConfiguredSecret,
   });
-});
-
-app.post('/api/stripe/connect', (req: Request, res: Response) => {
-  const { accountId, publishableKey, secretKey, accountName, mode, email, stripeEmail } = req.body;
-  const current = loadRegistry();
-  const settings = current.settings || {};
-
-  const resolvedMode = mode || settings.stripeMode || 'test';
-  const defaultPub = resolvedMode === 'live' 
-    ? 'pk_live_51NvWeddingApplePayLive123' 
-    : 'pk_test_51NvSAMPLEWeddingApplePayKey123';
-
-  const updatedSettings = {
-    ...settings,
-    stripeEnabled: true,
-    stripeAccountId: accountId || settings.stripeAccountId || `acct_1Nv${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
-    stripeAccountName: accountName || settings.stripeAccountName || `${settings.coupleNames || 'Sposi'} Wedding Fund`,
-    stripeEmail: stripeEmail || email || settings.stripeEmail || settings.paypalEmail || '',
-    stripePublishableKey: publishableKey || settings.stripePublishableKey || defaultPub,
-    stripeSecretKey: secretKey || settings.stripeSecretKey || '',
-    stripeMode: resolvedMode,
-    stripeConnectedAt: new Date().toISOString(),
-    stripeStatus: 'connected' as const,
-    applePayThroughStripe: true,
-    applePayEnabled: true,
-  };
-
-  const updated = {
-    ...current,
-    settings: updatedSettings,
-  };
-  saveRegistry(updated);
-  res.json({ success: true, settings: updatedSettings });
 });
 
 app.post('/api/stripe/disconnect', (req: Request, res: Response) => {

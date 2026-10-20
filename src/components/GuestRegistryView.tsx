@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useRegistry } from '../context/RegistryContext';
 import { GiftItem, GiftCategory } from '../types';
 import { ContributeModal } from './ContributeModal';
-import { Heart, Search, Check, Sparkles, MapPin, Calendar, ShieldCheck, ArrowRight, Gift, Camera } from 'lucide-react';
+import { Heart, Search, Check, Sparkles, MapPin, Calendar, ShieldCheck, ArrowRight, Gift, Camera, CreditCard } from 'lucide-react';
 
 export const GuestRegistryView: React.FC = () => {
   const { gifts, settings, totalRaised, totalTarget, setActiveView } = useRegistry();
@@ -18,6 +18,21 @@ export const GuestRegistryView: React.FC = () => {
   });
 
   const percentOverall = totalTarget > 0 ? Math.min(100, Math.round((totalRaised / totalTarget) * 100)) : 0;
+  const stripeReady = settings.stripeEnabled && settings.stripeStatus === 'connected' && Boolean(settings.stripeAccountId);
+  const weddingFund: GiftItem = {
+    id: 'wedding-fund',
+    title: 'Contributo libero per gli sposi',
+    subtitle: 'Un regalo da destinare ai nostri progetti insieme',
+    category: 'custom',
+    description: 'Scegli liberamente l’importo del tuo dono.',
+    imageUrl: settings.heroImage,
+    targetAmount: 0,
+    raisedAmount: 0,
+    isInfiniteQuota: true,
+    status: 'available',
+    contributionsCount: 0,
+    createdAt: new Date(0).toISOString(),
+  };
 
   return (
     <div className="min-h-screen bg-[#FAF9F5] pb-20">
@@ -69,13 +84,43 @@ export const GuestRegistryView: React.FC = () => {
 
             <div className="flex items-center gap-2 text-xs text-stone-700 font-medium">
               <ShieldCheck className="w-4 h-4 text-[#696d48]" />
-              <span>Versamento diretto su PayPal, Apple Pay & Bonifico</span>
+              <span>Pagamento con carta Stripe o bonifico IBAN</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 2. Search & Desires Header */}
+      {/* 2. Direct payment area for guests who want to make a free contribution. */}
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <div className="overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50/50 shadow-xs">
+          <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-700 text-white shadow-sm">
+                <Heart className="h-5 w-5" fill="currentColor" />
+              </div>
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">Un regalo per noi</span>
+                <h2 className="mt-1 font-editorial text-2xl font-bold text-stone-900">Invia un contributo libero agli sposi</h2>
+                <p className="mt-1 max-w-xl text-sm leading-relaxed text-stone-600">Scegli l’importo del tuo regalo e paga in modo sicuro con carta tramite Stripe.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActiveGiftForContribute(weddingFund)}
+              className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold shadow-sm transition-colors ${stripeReady ? 'bg-emerald-700 text-white hover:bg-emerald-800' : 'bg-[#636842] text-white hover:bg-[#525636]'}`}
+            >
+              {stripeReady ? <CreditCard className="h-4 w-4" /> : <Heart className="h-4 w-4" />}
+              {stripeReady ? 'Dona con carta' : 'Invia un contributo'}
+            </button>
+          </div>
+          <div className="flex items-center gap-2 border-t border-emerald-200/80 bg-white/70 px-6 py-3 text-xs text-stone-600 sm:px-8">
+            <ShieldCheck className="h-4 w-4 text-emerald-700" />
+            {stripeReady ? 'Il pagamento viene elaborato da Stripe: i dati della carta non passano da questo sito.' : 'Potrai scegliere le modalità di pagamento disponibili per questa lista.'}
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Search & Desires Header */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-stone-200">
           <div>
@@ -101,7 +146,7 @@ export const GuestRegistryView: React.FC = () => {
         </div>
       </section>
 
-      {/* 3. Gifts Grid */}
+      {/* 4. Gifts Grid */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         {gifts.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-2xl border border-stone-200 p-8 max-w-xl mx-auto shadow-xs">

@@ -6,3 +6,6 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Runtime registry: can contain guests, donations and payout details.
+data/registry.json

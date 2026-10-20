@@ -9,6 +9,9 @@ export default defineConfig(() => {
     resolve: {
       alias: {
         '@': path.resolve(import.meta.dirname ?? process.cwd(), '.'),
+        // The GitHub package is tracked in package-lock, while its source is
+        // vendored here until its npm/GitHub archive ships the declared dist/.
+        '@mdf/stripe-express-connect': path.resolve(import.meta.dirname ?? process.cwd(), 'stripe-express-connect/src/index.ts'),
       },
     },
     server: {

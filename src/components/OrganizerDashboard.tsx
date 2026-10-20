@@ -26,7 +26,7 @@ export const OrganizerDashboard: React.FC = () => {
     settings,
     totalRaised,
     totalTarget,
-    paypalTotal,
+    stripeTotal,
     bankTotal,
     setActiveView,
     setSelectedGuestIdForDrawer,
@@ -114,27 +114,27 @@ export const OrganizerDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* PayPal Direct Balance */}
+        {/* Stripe balance */}
         <div
           onClick={() => setActiveView('organizer_paypal')}
           className="p-5 bg-gradient-to-br from-white to-[#A6C1D8]/25 hover:to-[#A6C1D8]/40 transition-all cursor-pointer rounded-2xl border-2 border-[#A6C1D8] shadow-xs space-y-2 group"
         >
           <div className="flex items-center justify-between">
             <span className="text-[11px] uppercase tracking-wider text-slate-700 font-bold">
-              Conto PayPal Diretto
+              Pagamenti con carta
             </span>
             <div className="w-7 h-7 rounded-lg bg-[#A6C1D8] flex items-center justify-center text-slate-800 shadow-2xs">
               <CreditCard className="w-4 h-4" />
             </div>
           </div>
           <div className="text-3xl font-bold text-slate-900 tabular-nums">
-            {settings.currency}{paypalTotal.toLocaleString()}
+            {settings.currency}{stripeTotal.toLocaleString()}
           </div>
           <p className="text-[11px] text-slate-600 line-clamp-1 font-medium">
-            Accreditato su @{settings.paypalMeUsername}
+            Accredito diretto tramite Stripe
           </p>
           <span className="text-[11px] text-slate-800 font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-            Gestisci conto PayPal <ChevronRight className="w-3.5 h-3.5" />
+            Gestisci Stripe e IBAN <ChevronRight className="w-3.5 h-3.5" />
           </span>
         </div>
 

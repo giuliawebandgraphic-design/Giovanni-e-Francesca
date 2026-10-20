@@ -33,6 +33,7 @@ export interface Donation {
   status: DonationStatus;
   paypalTransactionId?: string;
   stripePaymentIntentId?: string;
+  stripeCheckoutSessionId?: string;
   message?: string;
   createdAt: string;
   thankYouSent: boolean;
