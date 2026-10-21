@@ -100,7 +100,7 @@ async function initialise(): Promise<void> {
 
       const initial = createInitialRegistry();
       await db.execute({
-        sql: 'INSERT INTO registry_state (id, data, version, last_modified) VALUES (1, ?, ?, ?)',
+        sql: 'INSERT OR IGNORE INTO registry_state (id, data, version, last_modified) VALUES (1, ?, ?, ?)',
         args: [JSON.stringify(initial), initial.version ?? 1, initial.lastModified ?? Date.now()],
       });
     })().catch((error) => {
