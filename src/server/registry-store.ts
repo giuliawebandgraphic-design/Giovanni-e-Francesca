@@ -68,16 +68,16 @@ export function normaliseRegistry(value: Partial<RegistryData>): RegistryData {
 function getClient(): Client {
   if (client) return client;
 
-  const url = process.env.TURSO_DATABASE_URL;
+  const url = process.env.giuliaspd_TURSO_DATABASE_URL;
   if (!url) {
     throw new RegistryStoreConfigurationError(
-      'TURSO_DATABASE_URL non è configurata. Collega un database Turso al progetto Vercel.',
+      'giuliaspd_TURSO_DATABASE_URL non è configurata. Collega un database Turso al progetto Vercel.',
     );
   }
 
   client = createClient({
     url,
-    authToken: process.env.TURSO_AUTH_TOKEN,
+    authToken: process.env.giuliaspd_TURSO_AUTH_TOKEN,
   });
   return client;
 }
