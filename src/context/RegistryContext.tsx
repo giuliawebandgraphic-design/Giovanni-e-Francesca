@@ -184,7 +184,7 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // while a browser is receiving an older registry snapshot.
   const authoritativeStripeSettingsRef = React.useRef<Partial<RegistrySettings> | null>(null);
 
-  // SQLite on the server is the single source of truth.
+  // The server-side database is the single source of truth.
   const pushSyncToServer = async (payload: {
     gifts?: GiftItem[];
     guests?: Guest[];
@@ -213,7 +213,7 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return false;
   };
 
-  // Pull the latest registry from the SQLite-backed API.
+  // Pull the latest registry from the persistent API.
   const refreshRegistry = async () => {
     try {
       const res = await fetch('/api/registry');
@@ -247,31 +247,37 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  // Load from SQLite at startup and listen for server-side changes (including
-  // Stripe webhooks) through Server-Sent Events.
+  // Load from the database at startup. Vercel Functions are request-based, so
+  // we poll the small version endpoint instead of keeping a long-lived SSE
+  // connection open. Same-browser tabs are still synchronized immediately by
+  // BroadcastChannel below.
   useEffect(() => {
     let cancelled = false;
-    let eventSource: EventSource | null = null;
 
     const connect = async () => {
       await refreshRegistry();
       isInitialDatabaseLoadDoneRef.current = true;
-      if (cancelled) return;
-
-      eventSource = new EventSource('/api/registry/events');
-      eventSource.onopen = () => setIsDatabaseConnected(true);
-      eventSource.onmessage = (event) => {
-        try {
-          const message = JSON.parse(event.data);
-          if (message.type === 'REGISTRY_UPDATED') void refreshRegistry();
-        } catch {
-          // Ignore malformed keep-alive messages.
-        }
-      };
-      eventSource.onerror = () => setIsDatabaseConnected(false);
     };
 
     void connect();
+
+    const pollId = window.setInterval(() => {
+      if (cancelled) return;
+      void (async () => {
+        try {
+          const response = await fetch('/api/registry/version', { cache: 'no-store' });
+          if (!response.ok) throw new Error(`Registry version request failed (${response.status})`);
+          const remote = await response.json() as { version?: number };
+          if (typeof remote.version === 'number' && remote.version > serverVersionRef.current) {
+            await refreshRegistry();
+          } else {
+            setIsDatabaseConnected(true);
+          }
+        } catch {
+          setIsDatabaseConnected(false);
+        }
+      })();
+    }, 15_000);
 
     // Cross-window BroadcastChannel listener (for same origin tabs)
     let channel: BroadcastChannel | null = null;
@@ -285,7 +291,7 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     return () => {
       cancelled = true;
-      eventSource?.close();
+      window.clearInterval(pollId);
       if (channel) channel.close();
     };
   }, []);
@@ -318,7 +324,7 @@ export const RegistryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     void reconcileStripeConnection();
     return () => { cancelled = true; };
-    // Run once: subsequent real-time changes are handled by the SSE listener.
+    // Run once: subsequent remote changes are picked up by the version poll.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
