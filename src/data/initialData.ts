@@ -1,30 +1,29 @@
 import { GiftItem, Guest, Donation, RegistrySettings } from '../types';
 
 export const INITIAL_SETTINGS: RegistrySettings = {
-  coupleNames: 'Giovanni & Francesca',
-  eventTitle: 'Il nostro Matrimonio',
-  eventLocation: 'Villa Cordevigo Wine Relais, Cavaion Veronese (VR)',
-  welcomeMessage:
-    'La vostra presenza è per noi il dono più prezioso. Se desiderate accompagnarci nel realizzare i nostri sogni per la nuova vita insieme o contribuire al nostro viaggio di nozze, qui potete inserire la vostra quota libera con versamento diretto su PayPal o bonifico bancario.',
+  coupleNames: '',
+  eventTitle: 'La nostra lista nozze',
+  eventLocation: '',
+  welcomeMessage: '',
   currency: '€',
-  paypalEmail: 'giovanni.francesca.wedding@gmail.com',
-  paypalMeUsername: 'giovannifrancescawedding',
-  bankIban: 'IT60 X 05428 11101 000000124890',
-  bankAccountHolder: 'Giovanni Rossi e Francesca Bianchi',
-  bankName: 'Intesa Sanpaolo - Filiale Verona Centro',
-  bankBic: 'BCITITMM',
-  heroImage: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80',
-  applePayEnabled: true,
-  applePayRecipient: 'giovanni.francesca.wedding@gmail.com',
+  paypalEmail: '',
+  paypalMeUsername: '',
+  bankIban: '',
+  bankAccountHolder: '',
+  bankName: '',
+  bankBic: '',
+  heroImage: '',
+  applePayEnabled: false,
+  applePayRecipient: '',
   stripeEnabled: false,
-  stripeEmail: 'giovanni.francesca.wedding@gmail.com',
+  stripeEmail: '',
   stripeAccountId: '',
-  stripeAccountName: 'Giovanni & Francesca Wedding Fund',
+  stripeAccountName: '',
   stripePublishableKey: '',
   stripeSecretKey: '',
   stripeMode: 'test',
   stripeStatus: 'disconnected',
-  applePayThroughStripe: true,
+  applePayThroughStripe: false,
 };
 
 // Default state: 2 demo gifts visible so couples can review and customize
@@ -63,6 +62,8 @@ export const DEMO_PRESET_GIFTS: GiftItem[] = [
   },
 ];
 
-export const INITIAL_GIFTS: GiftItem[] = DEMO_PRESET_GIFTS;
+// Examples are available through "Carica esempi", never inserted automatically
+// into a newly-created production registry.
+export const INITIAL_GIFTS: GiftItem[] = [];
 export const INITIAL_GUESTS: Guest[] = [];
 export const INITIAL_DONATIONS: Donation[] = [];

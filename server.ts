@@ -10,6 +10,7 @@ import {
   createStripeWebhookHandler,
   type CheckoutPayload,
 } from './src/lib/stripe-express-connect/server/index.ts';
+import { createInitialRegistry as createEmptyRegistry } from './src/server/registry-store.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,7 +18,6 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const DATABASE_PATH = path.resolve(process.env.DATABASE_PATH || path.join(__dirname, 'data', 'registry.sqlite'));
-const LEGACY_DATA_FILE = path.resolve(__dirname, 'data', 'registry.json');
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 const APP_URL = (process.env.APP_URL || `http://localhost:${PORT}`).replace(/\/$/, '');
@@ -43,39 +43,7 @@ type RegistryData = {
 let sseClients: Response[] = [];
 
 function createInitialRegistry(): RegistryData {
-  return {
-    version: 1,
-    lastModified: Date.now(),
-    settings: {
-      coupleNames: 'Giovanni & Francesca',
-      eventTitle: 'Il nostro Matrimonio',
-      eventLocation: 'Villa Cordevigo Wine Relais, Cavaion Veronese (VR)',
-      welcomeMessage:
-        'La vostra presenza è per noi il dono più prezioso. Se desiderate accompagnarci nel realizzare i nostri sogni per la nuova vita insieme o contribuire al nostro viaggio di nozze, qui potete inserire la vostra quota libera con versamento diretto su PayPal o bonifico bancario.',
-      currency: '€',
-      paypalEmail: 'giovanni.francesca.wedding@gmail.com',
-      paypalMeUsername: 'giovannifrancescawedding',
-      bankIban: 'IT60 X 05428 11101 000000124890',
-      bankAccountHolder: 'Giovanni Rossi e Francesca Bianchi',
-      bankName: 'Intesa Sanpaolo - Filiale Verona Centro',
-      bankBic: 'BCITITMM',
-      heroImage: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80',
-    },
-    gifts: [],
-    guests: [],
-    donations: [],
-  };
-}
-
-function readLegacyRegistry(): RegistryData | null {
-  try {
-    if (!fs.existsSync(LEGACY_DATA_FILE)) return null;
-    const legacy = JSON.parse(fs.readFileSync(LEGACY_DATA_FILE, 'utf-8')) as RegistryData;
-    return legacy && typeof legacy === 'object' ? legacy : null;
-  } catch (err) {
-    console.warn('Unable to import legacy registry.json; creating an empty registry instead.', err);
-    return null;
-  }
+  return createEmptyRegistry() as RegistryData;
 }
 
 function normaliseRegistry(value: Partial<RegistryData>): RegistryData {
@@ -106,7 +74,7 @@ function initialiseRegistryDatabase() {
   const existing = registryDb.prepare('SELECT id FROM registry_state WHERE id = 1').get();
   if (existing) return;
 
-  const initial = normaliseRegistry(readLegacyRegistry() || createInitialRegistry());
+  const initial = normaliseRegistry(createInitialRegistry());
   const version = Number(initial.version) || 1;
   const lastModified = Number(initial.lastModified) || Date.now();
   initial.version = version;
