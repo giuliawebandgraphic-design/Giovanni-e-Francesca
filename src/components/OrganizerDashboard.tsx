@@ -33,7 +33,7 @@ export const OrganizerDashboard: React.FC = () => {
     resetToDefaults,
     clearAllData,
     loadDemoGifts,
-    isFirestoreConnected,
+    isDatabaseConnected,
   } = useRegistry();
 
   const percent = totalTarget > 0 ? Math.min(100, Math.round((totalRaised / totalTarget) * 100)) : 0;
@@ -55,8 +55,8 @@ export const OrganizerDashboard: React.FC = () => {
               </div>
 
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
-                <span className={`w-2 h-2 rounded-full bg-emerald-500 ${isFirestoreConnected ? 'animate-pulse' : ''}`}></span>
-                <span>Cloud Firestore Database: Connesso & Sincronizzato Ovunque</span>
+                <span className={`w-2 h-2 rounded-full bg-emerald-500 ${isDatabaseConnected ? 'animate-pulse' : ''}`}></span>
+                <span>Database SQLite: Connesso & Sincronizzato Ovunque</span>
               </div>
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight">

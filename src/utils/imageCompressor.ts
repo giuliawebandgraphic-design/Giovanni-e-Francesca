@@ -1,7 +1,7 @@
 /**
- * Utility to compress and resize images client-side before storing in Firestore/localStorage.
+ * Utility to compress and resize images client-side before storing in SQLite/localStorage.
  * Guarantees that uploaded images stay small (typically 25KB - 45KB), preventing
- * Firestore document size limits (1MB) and localStorage quota exceeded errors.
+ * SQLite storage and localStorage quota exceeded errors.
  */
 export function compressImage(
   file: File,

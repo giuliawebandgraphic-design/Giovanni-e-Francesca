@@ -194,29 +194,6 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
                   <label className="text-sm font-semibold text-stone-900">
                     2. I tuoi dati
                   </label>
-                  {guests.length > 0 && (
-                    <div className="flex gap-2 text-xs">
-                      <button
-                        type="button"
-                        onClick={() => setGuestMode('new')}
-                        className={`cursor-pointer ${
-                          guestMode === 'new' ? 'text-[#636842] font-bold underline' : 'text-stone-500'
-                        }`}
-                      >
-                        Nuovo invitato
-                      </button>
-                      <span className="text-stone-300">·</span>
-                      <button
-                        type="button"
-                        onClick={() => setGuestMode('existing')}
-                        className={`cursor-pointer ${
-                          guestMode === 'existing' ? 'text-[#636842] font-bold underline' : 'text-stone-500'
-                        }`}
-                      >
-                        Seleziona dalla lista
-                      </button>
-                    </div>
-                  )}
                 </div>
 
                 {guestMode === 'existing' ? (

@@ -19,17 +19,18 @@ export const PayPalPayoutSettings: React.FC = () => {
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [serverStripeSettings, setServerStripeSettings] = useState<StripeConnectionSettings | null>(null);
+  const [isStripeEmailDirty, setIsStripeEmailDirty] = useState(false);
 
   useEffect(() => {
-    setStripeEmail(settings.stripeEmail || '');
+    if (!isStripeEmailDirty) setStripeEmail(settings.stripeEmail || '');
     setBankIban(settings.bankIban || '');
     setBankAccountHolder(settings.bankAccountHolder || '');
     setBankName(settings.bankName || '');
-  }, [settings.stripeEmail, settings.bankIban, settings.bankAccountHolder, settings.bankName]);
+  }, [settings.stripeEmail, settings.bankIban, settings.bankAccountHolder, settings.bankName, isStripeEmailDirty]);
 
-  // The hosted Stripe return route writes to the server registry. Firestore may
+  // The hosted Stripe return route writes to the server registry. The browser may
   // still contain the earlier "pending" snapshot, so reconcile it once whenever
-  // this screen opens and keep the server answer visible while Firebase catches up.
+  // this screen opens and keep the server answer visible while SQLite sync catches up.
   useEffect(() => {
     let cancelled = false;
 
@@ -61,7 +62,9 @@ export const PayPalPayoutSettings: React.FC = () => {
   }, []);
 
   const onAccountCreated = async (result: OnboardingResponse) => {
-    await updateSettings({ stripeAccountId: result.accountId, stripeEmail: stripeEmail.trim(), stripeStatus: 'pending', stripeEnabled: false, applePayEnabled: false, applePayThroughStripe: false });
+    const email = stripeEmail.trim().toLowerCase();
+    await updateSettings({ stripeAccountId: result.accountId, stripeEmail: email, stripeStatus: 'pending', stripeEnabled: false, applePayEnabled: false, applePayThroughStripe: false });
+    setIsStripeEmailDirty(false);
   };
 
   const saveIban = async (event: React.FormEvent) => {
@@ -112,7 +115,7 @@ export const PayPalPayoutSettings: React.FC = () => {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <article className="rounded-2xl border-2 border-stone-900 bg-white p-6 space-y-5">
         <div className="flex items-start gap-3"><IconBox><CreditCard className="w-5 h-5" /></IconBox><div><h3 className="font-editorial text-xl font-bold text-stone-900">Pagamenti con carta</h3><p className="mt-1 text-sm text-stone-600">Stripe Checkout gestisce carte e metodi disponibili sul dispositivo, senza raccogliere dati di pagamento nel sito.</p></div></div>
-        {stripeConnected ? <div className="space-y-4"><div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950"><div className="flex items-center gap-2 font-bold"><CheckCircle2 className="w-4 h-4" /> Stripe è collegato e pronto a ricevere donazioni.</div><p className="mt-2 text-emerald-800">Account: {displayedStripeSettings.stripeEmail || displayedStripeSettings.stripeAccountId}</p></div><div className="flex flex-wrap gap-2"><a href="https://dashboard.stripe.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-stone-900 px-4 py-2.5 text-xs font-bold text-white"><ExternalLink className="w-3.5 h-3.5" /> Dashboard Stripe</a><button type="button" onClick={disconnectStripe} className="inline-flex items-center gap-2 rounded-xl border border-rose-200 px-4 py-2.5 text-xs font-bold text-rose-700 hover:bg-rose-50"><Unlink className="w-3.5 h-3.5" /> Disattiva per la lista</button></div></div> : <div className="space-y-4 rounded-xl bg-stone-50 p-4"><label className="block text-xs font-bold text-stone-800">Email del titolare dell’account Stripe</label><input type="email" value={stripeEmail} onChange={(event) => setStripeEmail(event.target.value)} placeholder="nome@example.com" className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2.5 text-sm text-stone-900" /><ConnectExpressButton email={stripeEmail.trim() || undefined} country="IT" accountId={settings.stripeAccountId || undefined} onCreated={onAccountCreated} onError={(cause) => setError(cause.message)} className="flex w-full items-center justify-center rounded-xl bg-stone-900 px-4 py-3 text-sm font-bold text-white hover:bg-black">Collegati con Stripe per ricevere le donazioni</ConnectExpressButton><p className="text-xs leading-relaxed text-stone-500">Stripe richiederà i dati dell’intestatario e l’IBAN per gli accrediti nel proprio ambiente protetto.</p></div>}
+        {stripeConnected ? <div className="space-y-4"><div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950"><div className="flex items-center gap-2 font-bold"><CheckCircle2 className="w-4 h-4" /> Stripe è collegato e pronto a ricevere donazioni.</div><p className="mt-2 text-emerald-800">Account: {displayedStripeSettings.stripeEmail || displayedStripeSettings.stripeAccountId}</p></div><div className="flex flex-wrap gap-2"><a href="/api/stripe-connect/dashboard" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-stone-900 px-4 py-2.5 text-xs font-bold text-white"><ExternalLink className="w-3.5 h-3.5" /> Dashboard Stripe</a><button type="button" onClick={disconnectStripe} className="inline-flex items-center gap-2 rounded-xl border border-rose-200 px-4 py-2.5 text-xs font-bold text-rose-700 hover:bg-rose-50"><Unlink className="w-3.5 h-3.5" /> Disattiva per la lista</button></div></div> : <div className="space-y-4 rounded-xl bg-stone-50 p-4"><label className="block text-xs font-bold text-stone-800">Email del titolare dell’account Stripe</label><input type="email" value={stripeEmail} onChange={(event) => { setStripeEmail(event.target.value); setIsStripeEmailDirty(true); }} placeholder="nome@example.com" className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2.5 text-sm text-stone-900" /><ConnectExpressButton email={stripeEmail.trim() || undefined} country="IT" accountId={settings.stripeAccountId || undefined} disabled={!stripeEmail.trim()} onCreated={onAccountCreated} onError={(cause) => setError(cause.message)} className="flex w-full items-center justify-center rounded-xl bg-stone-900 px-4 py-3 text-sm font-bold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-50">Collegati con Stripe per ricevere le donazioni</ConnectExpressButton><p className="text-xs leading-relaxed text-stone-500">L’email viene salvata e, se necessario, aggiornata su Stripe quando avvii il collegamento.</p></div>}
       </article>
 
       <article className="rounded-2xl border border-stone-200 bg-white p-6 space-y-5">

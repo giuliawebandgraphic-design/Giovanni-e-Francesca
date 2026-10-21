@@ -37,7 +37,15 @@ export function ConnectExpressButton({
         credentials: 'same-origin',
         body: JSON.stringify({ accountId, email, country }),
       });
-      const result = (await response.json()) as OnboardingResponse & { error?: string };
+      const responseBody = await response.text();
+      let result: OnboardingResponse & { error?: string } = {} as OnboardingResponse & { error?: string };
+      if (responseBody) {
+        try {
+          result = JSON.parse(responseBody) as OnboardingResponse & { error?: string };
+        } catch {
+          throw new Error('Il server ha restituito una risposta non valida. Riprova tra poco.');
+        }
+      }
       if (!response.ok || !result.onboardingUrl) throw new Error(result.error || 'Impossibile avviare Stripe Connect.');
       await onCreated?.(result);
       window.location.assign(result.onboardingUrl);

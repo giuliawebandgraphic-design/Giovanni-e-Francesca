@@ -9,3 +9,6 @@ coverage/
 
 # Runtime registry: can contain guests, donations and payout details.
 data/registry.json
+data/*.sqlite
+data/*.sqlite-shm
+data/*.sqlite-wal

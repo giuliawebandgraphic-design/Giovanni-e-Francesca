@@ -19,6 +19,9 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@mdf/stripe-express-connect": [
+        "./src/lib/stripe-express-connect/index.ts"
       ]
     },
     "allowImportingTsExtensions": true,
