@@ -3,44 +3,46 @@ import 'dotenv/config';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { DatabaseSync } from 'node:sqlite';
 import Stripe from 'stripe';
 import {
   createStripeExpressConnectRouter,
   createStripeWebhookHandler,
   type CheckoutPayload,
-} from './stripe-express-connect/src/server/index.ts';
+} from './src/lib/stripe-express-connect/server/index.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
-const DATA_FILE = path.resolve(__dirname, 'data', 'registry.json');
+const DATABASE_PATH = path.resolve(process.env.DATABASE_PATH || path.join(__dirname, 'data', 'registry.sqlite'));
+const LEGACY_DATA_FILE = path.resolve(__dirname, 'data', 'registry.json');
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 const APP_URL = (process.env.APP_URL || `http://localhost:${PORT}`).replace(/\/$/, '');
 const WEDDING_FUND_GIFT_ID = 'wedding-fund';
 const WEDDING_FUND_TITLE = 'Contributo libero per gli sposi';
 
-// Ensure data directory exists
-const dataDir = path.dirname(DATA_FILE);
+// The database directory must live on persistent storage in production.
+const dataDir = path.dirname(DATABASE_PATH);
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-// In-memory cache & SSE clients
+type RegistryData = {
+  version?: number;
+  lastModified?: number;
+  settings: any;
+  gifts: any[];
+  guests: any[];
+  donations: any[];
+};
+
+// In-memory SSE clients. SQLite is the sole source of truth.
 let sseClients: Response[] = [];
 
-// Helper to load registry from disk
-function loadRegistry() {
-  try {
-    if (fs.existsSync(DATA_FILE)) {
-      const content = fs.readFileSync(DATA_FILE, 'utf-8');
-      return JSON.parse(content);
-    }
-  } catch (err) {
-    console.error('Error reading registry.json:', err);
-  }
+function createInitialRegistry(): RegistryData {
   return {
     version: 1,
     lastModified: Date.now(),
@@ -65,15 +67,91 @@ function loadRegistry() {
   };
 }
 
-// Helper to save registry to disk and broadcast
-function saveRegistry(data: any) {
+function readLegacyRegistry(): RegistryData | null {
   try {
-    data.lastModified = Date.now();
-    data.version = (data.version || 0) + 1;
-    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    if (!fs.existsSync(LEGACY_DATA_FILE)) return null;
+    const legacy = JSON.parse(fs.readFileSync(LEGACY_DATA_FILE, 'utf-8')) as RegistryData;
+    return legacy && typeof legacy === 'object' ? legacy : null;
+  } catch (err) {
+    console.warn('Unable to import legacy registry.json; creating an empty registry instead.', err);
+    return null;
+  }
+}
+
+function normaliseRegistry(value: Partial<RegistryData>): RegistryData {
+  const initial = createInitialRegistry();
+  return {
+    ...initial,
+    ...value,
+    settings: value.settings && typeof value.settings === 'object' ? value.settings : initial.settings,
+    gifts: Array.isArray(value.gifts) ? value.gifts : [],
+    guests: Array.isArray(value.guests) ? value.guests : [],
+    donations: Array.isArray(value.donations) ? value.donations : [],
+  };
+}
+
+const registryDb = new DatabaseSync(DATABASE_PATH);
+registryDb.exec(`
+  PRAGMA journal_mode = WAL;
+  PRAGMA busy_timeout = 5000;
+  CREATE TABLE IF NOT EXISTS registry_state (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    data TEXT NOT NULL,
+    version INTEGER NOT NULL,
+    last_modified INTEGER NOT NULL
+  );
+`);
+
+function initialiseRegistryDatabase() {
+  const existing = registryDb.prepare('SELECT id FROM registry_state WHERE id = 1').get();
+  if (existing) return;
+
+  const initial = normaliseRegistry(readLegacyRegistry() || createInitialRegistry());
+  const version = Number(initial.version) || 1;
+  const lastModified = Number(initial.lastModified) || Date.now();
+  initial.version = version;
+  initial.lastModified = lastModified;
+  registryDb.prepare(
+    'INSERT INTO registry_state (id, data, version, last_modified) VALUES (1, ?, ?, ?)',
+  ).run(JSON.stringify(initial), version, lastModified);
+}
+
+initialiseRegistryDatabase();
+
+// Helper to load the complete registry from SQLite.
+function loadRegistry(): RegistryData {
+  const row = registryDb.prepare(
+    'SELECT data, version, last_modified AS lastModified FROM registry_state WHERE id = 1',
+  ).get() as { data: string; version: number; lastModified: number } | undefined;
+
+  if (!row) {
+    throw new Error('SQLite registry has not been initialised.');
+  }
+
+  try {
+    const data = normaliseRegistry(JSON.parse(row.data) as RegistryData);
+    data.version = row.version;
+    data.lastModified = row.lastModified;
+    return data;
+  } catch (err) {
+    console.error('Unable to read SQLite registry state:', err);
+    throw new Error('SQLite registry contains invalid data.');
+  }
+}
+
+// Save one atomic registry snapshot and notify connected browsers.
+function saveRegistry(data: RegistryData) {
+  try {
+    const current = registryDb.prepare('SELECT version FROM registry_state WHERE id = 1').get() as { version: number } | undefined;
+    const saved = normaliseRegistry(JSON.parse(JSON.stringify(data)) as RegistryData);
+    saved.lastModified = Date.now();
+    saved.version = (current?.version || 0) + 1;
+    registryDb.prepare(
+      'UPDATE registry_state SET data = ?, version = ?, last_modified = ? WHERE id = 1',
+    ).run(JSON.stringify(saved), saved.version, saved.lastModified);
 
     // Broadcast to SSE clients
-    const payload = `data: ${JSON.stringify({ type: 'REGISTRY_UPDATED', version: data.version, lastModified: data.lastModified })}\n\n`;
+    const payload = `data: ${JSON.stringify({ type: 'REGISTRY_UPDATED', version: saved.version, lastModified: saved.lastModified })}\n\n`;
     sseClients.forEach((client) => {
       try {
         client.write(payload);
@@ -82,9 +160,9 @@ function saveRegistry(data: any) {
       }
     });
 
-    return data;
+    return saved;
   } catch (err) {
-    console.error('Error writing registry.json:', err);
+    console.error('Error writing SQLite registry:', err);
     throw err;
   }
 }
@@ -255,9 +333,8 @@ app.get('/api/registry/events', (req: Request, res: Response) => {
 if (STRIPE_SECRET_KEY) {
   const stripe = new Stripe(STRIPE_SECRET_KEY);
 
-  // Stripe onboarding updates the server-side registry after Stripe redirects
-  // back here. Firestore cannot be updated from this callback, so the client
-  // uses this small endpoint to reconcile its cached/Firebase state.
+  // Stripe onboarding updates the SQLite registry after Stripe redirects back
+  // here. The client can reconcile its cached state through this endpoint.
   app.get('/api/stripe-connect/registry-status', (_req: Request, res: Response) => {
     const settings = loadRegistry().settings || {};
     const connected = settings.stripeStatus === 'connected' && settings.stripeEnabled === true;

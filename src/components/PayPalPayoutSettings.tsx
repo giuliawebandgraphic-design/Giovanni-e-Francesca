@@ -27,9 +27,9 @@ export const PayPalPayoutSettings: React.FC = () => {
     setBankName(settings.bankName || '');
   }, [settings.stripeEmail, settings.bankIban, settings.bankAccountHolder, settings.bankName]);
 
-  // The hosted Stripe return route writes to the server registry. Firestore may
+  // The hosted Stripe return route writes to the server registry. The browser may
   // still contain the earlier "pending" snapshot, so reconcile it once whenever
-  // this screen opens and keep the server answer visible while Firebase catches up.
+  // this screen opens and keep the server answer visible while SQLite sync catches up.
   useEffect(() => {
     let cancelled = false;
 
