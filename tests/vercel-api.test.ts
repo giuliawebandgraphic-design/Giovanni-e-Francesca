@@ -20,7 +20,11 @@ async function json(response: Response): Promise<Record<string, unknown>> {
 
 before(async () => {
   testDirectory = await mkdtemp(path.join(tmpdir(), 'wedding-registry-vercel-test-'));
-  process.env.giuliaspd_TURSO_DATABASE_URL = `file:${path.join(testDirectory, 'registry.sqlite')}`;
+  // The invalid fallback makes this test fail if the deployment-specific
+  // Marketplace variable ever takes precedence over the primary database.
+  process.env.REGISTRY_TURSO_DATABASE_URL = `file:${path.join(testDirectory, 'registry.sqlite')}`;
+  process.env.REGISTRY_TURSO_AUTH_TOKEN = '';
+  process.env.giuliaspd_TURSO_DATABASE_URL = 'http://127.0.0.1:1';
   process.env.giuliaspd_TURSO_AUTH_TOKEN = '';
   delete process.env.STRIPE_SECRET_KEY;
   delete process.env.STRIPE_WEBHOOK_SECRET;
@@ -29,6 +33,8 @@ before(async () => {
 
 after(async () => {
   await rm(testDirectory, { recursive: true, force: true });
+  delete process.env.REGISTRY_TURSO_DATABASE_URL;
+  delete process.env.REGISTRY_TURSO_AUTH_TOKEN;
 });
 
 test('la Function Vercel inizializza un registro vuoto e risponde al controllo salute', async () => {

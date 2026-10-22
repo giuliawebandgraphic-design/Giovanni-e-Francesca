@@ -68,16 +68,20 @@ export function normaliseRegistry(value: Partial<RegistryData>): RegistryData {
 function getClient(): Client {
   if (client) return client;
 
-  const url = process.env.giuliaspd_TURSO_DATABASE_URL;
+  // REGISTRY_TURSO_* are deliberately project-owned variables. The Turso
+  // Marketplace integration supplies giuliaspd_TURSO_* per deployment branch;
+  // using the project-owned connection first keeps production data in the
+  // configured primary database across deployments.
+  const url = process.env.REGISTRY_TURSO_DATABASE_URL ?? process.env.giuliaspd_TURSO_DATABASE_URL;
   if (!url) {
     throw new RegistryStoreConfigurationError(
-      'giuliaspd_TURSO_DATABASE_URL non è configurata. Collega un database Turso al progetto Vercel.',
+      'REGISTRY_TURSO_DATABASE_URL non è configurata. Configura il database Turso principale su Vercel.',
     );
   }
 
   client = createClient({
     url,
-    authToken: process.env.giuliaspd_TURSO_AUTH_TOKEN,
+    authToken: process.env.REGISTRY_TURSO_AUTH_TOKEN ?? process.env.giuliaspd_TURSO_AUTH_TOKEN,
   });
   return client;
 }
