@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useRegistry } from '../context/RegistryContext';
 import { GiftItem } from '../types';
 import { ContributeModal } from './ContributeModal';
-import { Search, Gift, ArrowRight } from 'lucide-react';
+import { Gift, ArrowRight } from 'lucide-react';
 
 export const GuestEmbedView: React.FC = () => {
-  const { gifts, settings, refreshRegistry } = useRegistry();
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const { gifts, refreshRegistry } = useRegistry();
   const [activeGiftForContribute, setActiveGiftForContribute] = useState<GiftItem | null>(null);
 
   // Auto-fetch fresh registry data on mount and listen to refresh messages
@@ -54,62 +53,19 @@ export const GuestEmbedView: React.FC = () => {
       if (observer) observer.disconnect();
       window.removeEventListener('resize', notifyHeight);
     };
-  }, [gifts, searchQuery]);
-
-  const filteredGifts = gifts.filter((gift) => {
-    const matchesSearch =
-      gift.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      gift.subtitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      gift.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
-  });
+  }, [gifts]);
 
   return (
     <div className="w-full bg-transparent text-stone-900 font-sans pb-4 selection:bg-[#BCBF97]/40">
-      {/* 1. Barra Ricerca Desideri */}
-      <div className="max-w-6xl mx-auto px-2 sm:px-4 pt-1 pb-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-200/80">
-          <div>
-            <h3 className="font-editorial text-xl font-bold text-stone-900">
-              I Nostri Desideri
-            </h3>
-            <p className="text-xs text-stone-500">
-              Partecipa con un contributo libero
-            </p>
-          </div>
-
-          <div className="relative w-full sm:w-64">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-            <input
-              type="text"
-              placeholder="Cerca regalo..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3.5 py-1.5 text-xs bg-white border border-stone-300 rounded-xl text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#BCBF97]"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Griglia Desideri (Solo i Regali / Quote) */}
       <main className="max-w-6xl mx-auto px-2 sm:px-4">
-        {filteredGifts.length === 0 ? (
+        {gifts.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-2xl border border-stone-200 p-8 space-y-3">
             <Gift className="w-10 h-10 text-stone-300 mx-auto" />
-            <p className="text-stone-600 text-sm font-medium">Nessun desiderio trovato in questa categoria.</p>
-            <button
-              type="button"
-              onClick={() => {
-                setSearchQuery('');
-              }}
-              className="px-4 py-2 bg-[#636842] text-white text-xs font-semibold rounded-xl hover:bg-[#525636] transition-colors cursor-pointer"
-            >
-              Mostra tutti i desideri
-            </button>
+            <p className="text-stone-600 text-sm font-medium">Non ci sono ancora desideri da mostrare.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredGifts.map((gift) => {
+            {gifts.map((gift) => {
               const percent = gift.isInfiniteQuota
                 ? 100
                 : gift.targetAmount > 0
