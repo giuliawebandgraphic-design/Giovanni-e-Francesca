@@ -6,11 +6,23 @@ import { fileURLToPath } from 'url';
 import { DatabaseSync } from 'node:sqlite';
 import Stripe from 'stripe';
 import {
+  dashboardSessionCookie,
+  expiredDashboardSessionCookie,
+  hasDashboardSession,
+  isDashboardPasswordValid,
+  isDashboardProtectionConfigured,
+} from './src/server/dashboard-auth.ts';
+import {
   createStripeExpressConnectRouter,
   createStripeWebhookHandler,
   type CheckoutPayload,
 } from './src/lib/stripe-express-connect/server/index.ts';
 import { createInitialRegistry as createEmptyRegistry } from './src/server/registry-store.ts';
+import {
+  calculateApplicationFeeAmount,
+  createDestinationPaymentIntent,
+  platformMarkupCentsFromEnvironment,
+} from './src/server/stripe-destination-payments.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -246,6 +258,33 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get('/api/dashboard/session', (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({
+    configured: isDashboardProtectionConfigured(),
+    authenticated: hasDashboardSession(req.headers.cookie),
+  });
+});
+
+app.post('/api/dashboard/login', (req: Request, res: Response) => {
+  if (!isDashboardProtectionConfigured()) {
+    res.status(503).json({ error: 'Protezione dashboard non configurata.' });
+    return;
+  }
+  if (!isDashboardPasswordValid(req.body?.password)) {
+    res.status(401).json({ error: 'Credenziali non valide.' });
+    return;
+  }
+  res.setHeader('Set-Cookie', dashboardSessionCookie());
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ authenticated: true });
+});
+
+app.post('/api/dashboard/logout', (_req: Request, res: Response) => {
+  res.setHeader('Set-Cookie', expiredDashboardSessionCookie());
+  res.status(204).end();
+});
+
 // 1. API: Get entire registry
 app.get('/api/registry', (req: Request, res: Response) => {
   const data = loadRegistry();
@@ -408,6 +447,13 @@ if (STRIPE_SECRET_KEY) {
       saveRegistry(current);
     },
     resolveAccountId: () => loadRegistry().settings?.stripeAccountId || null,
+    // The application fee refunds the platform for Stripe processing and may
+    // include an optional net markup. The Checkout router uses this value for
+    // a destination charge to the couple's Express account.
+    applicationFeeAmount: (_payload, amountInCents) => calculateApplicationFeeAmount(
+      amountInCents,
+      platformMarkupCentsFromEnvironment(),
+    ),
     validateCheckout: (_request, payload: CheckoutPayload) => {
       const current = loadRegistry();
       const giftId = payload.metadata?.giftId;
@@ -527,11 +573,16 @@ app.post('/api/stripe/create-payment-intent', async (req: Request, res: Response
       try {
         const { default: Stripe } = await import('stripe');
         const stripe = new Stripe(secretKey);
-        const paymentIntent = await stripe.paymentIntents.create({
+        const destinationAccountId = settings.stripeAccountId;
+        if (typeof destinationAccountId !== 'string' || !destinationAccountId.startsWith('acct_')) {
+          return res.status(409).json({ error: 'Account Stripe Connect della coppia non disponibile.' });
+        }
+        const paymentIntent = await createDestinationPaymentIntent(stripe, {
           amount: amountInCents,
           currency: currency.toLowerCase(),
+          destinationAccountId,
+          platformMarkupCents: platformMarkupCentsFromEnvironment(),
           description: `Regalo nozze: ${giftTitle || 'Lista Nozze'} da ${guestName || 'Invitato'}`,
-          automatic_payment_methods: { enabled: true },
           metadata: {
             giftTitle: giftTitle || '',
             guestName: guestName || '',

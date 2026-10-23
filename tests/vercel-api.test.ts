@@ -28,6 +28,7 @@ before(async () => {
   process.env.giuliaspd_TURSO_AUTH_TOKEN = '';
   delete process.env.STRIPE_SECRET_KEY;
   delete process.env.STRIPE_WEBHOOK_SECRET;
+  process.env.DASHBOARD_PASSWORD = 'password-di-test';
   ({ handleVercelApi } = await import('../src/server/vercel-api.ts'));
 });
 
@@ -35,6 +36,35 @@ after(async () => {
   await rm(testDirectory, { recursive: true, force: true });
   delete process.env.REGISTRY_TURSO_DATABASE_URL;
   delete process.env.REGISTRY_TURSO_AUTH_TOKEN;
+  delete process.env.DASHBOARD_PASSWORD;
+});
+
+test('la dashboard richiede una password verificata dal server', async () => {
+  const initialSession = await handleVercelApi(request('/api/dashboard/session'));
+  assert.equal(initialSession.status, 200);
+  assert.deepEqual(await json(initialSession), { configured: true, authenticated: false });
+
+  const denied = await handleVercelApi(request('/api/dashboard/login', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ password: 'errata' }),
+  }));
+  assert.equal(denied.status, 401);
+
+  const accepted = await handleVercelApi(request('/api/dashboard/login', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ password: 'password-di-test' }),
+  }));
+  assert.equal(accepted.status, 200);
+  const cookie = accepted.headers.get('set-cookie');
+  assert.ok(cookie);
+  assert.match(cookie, /HttpOnly/);
+
+  const authenticatedSession = await handleVercelApi(request('/api/dashboard/session', {
+    headers: { cookie: cookie.split(';')[0] },
+  }));
+  assert.deepEqual(await json(authenticatedSession), { configured: true, authenticated: true });
 });
 
 test('la Function Vercel inizializza un registro vuoto e risponde al controllo salute', async () => {
