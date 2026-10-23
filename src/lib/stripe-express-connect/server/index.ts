@@ -24,7 +24,10 @@ export interface StripeExpressConnectOptions {
   resolveAccountId?: (request: Request, payload: CheckoutPayload) => Promise<string | null> | string | null;
   /** Validate or replace client supplied price/title before a Checkout Session is created. */
   validateCheckout?: (request: Request, payload: CheckoutPayload) => Promise<CheckoutPayload> | CheckoutPayload;
-  /** Amount in cents that the platform keeps. Omit or return 0 when the platform takes no fee. */
+  /**
+   * Total application fee in cents for the destination charge. It can include
+   * Stripe processing costs plus a platform markup.
+   */
   applicationFeeAmount?: (payload: CheckoutPayload, amountInCents: number) => number | Promise<number>;
   /** Persist the returned Express account ID against the signed-in application user. */
   onAccountCreated?: (account: { id: string }, request: Request) => Promise<void> | void;
@@ -54,7 +57,7 @@ function metadata(input?: Record<string, string>): Record<string, string> | unde
 }
 
 /**
- * Express router for hosted Express onboarding and direct-charge Stripe Checkout.
+ * Express router for hosted Express onboarding and destination-charge Stripe Checkout.
  * Mount it after authentication middleware, but never put the platform secret in the client.
  */
 export function createStripeExpressConnectRouter(options: StripeExpressConnectOptions) {
@@ -115,8 +118,12 @@ export function createStripeExpressConnectRouter(options: StripeExpressConnectOp
         cancel_url: options.checkout.cancelUrl,
         line_items: [{ price_data: { currency: (payload.currency || 'eur').toLowerCase(), unit_amount: amount, product_data: { name: payload.title || 'Contributo', description: payload.description } }, quantity: 1 }],
         metadata: metadata(payload.metadata),
-        payment_intent_data: fee ? { application_fee_amount: fee, metadata: metadata(payload.metadata) } : { metadata: metadata(payload.metadata) },
-      }, { stripeAccount: accountId });
+        payment_intent_data: {
+          ...(fee ? { application_fee_amount: fee } : {}),
+          transfer_data: { destination: accountId },
+          metadata: metadata(payload.metadata),
+        },
+      });
       if (!session.url) throw new Error('Stripe non ha restituito l’URL di Checkout.');
       res.json({ id: session.id, url: session.url });
     } catch (error) {

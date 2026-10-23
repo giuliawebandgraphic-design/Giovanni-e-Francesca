@@ -10,6 +10,7 @@ import { SidebarDrawer } from './components/SidebarDrawer';
 import { GuestRegistryView } from './components/GuestRegistryView';
 import { GuestEmbedView } from './components/GuestEmbedView';
 import { OrganizerDashboard } from './components/OrganizerDashboard';
+import { DashboardPasswordGate } from './components/DashboardPasswordGate';
 import { GuestDonationsManager } from './components/GuestDonationsManager';
 import { WishlistManager } from './components/WishlistManager';
 import { PayPalPayoutSettings } from './components/PayPalPayoutSettings';
@@ -52,7 +53,7 @@ const MainContent: React.FC = () => {
     );
   }
 
-  return (
+  const dashboardContent = (
     <div className="min-h-screen flex flex-col bg-[#FAF9F5]">
       {/* Collapsible lateral sidebar menu */}
       <SidebarDrawer />
@@ -129,6 +130,12 @@ const MainContent: React.FC = () => {
       </footer>
     </div>
   );
+
+  // The registry stays publicly accessible to invited guests; every management
+  // view is rendered only after the password check succeeds.
+  return activeView === 'guest_registry'
+    ? dashboardContent
+    : <DashboardPasswordGate>{dashboardContent}</DashboardPasswordGate>;
 };
 
 export default function App() {

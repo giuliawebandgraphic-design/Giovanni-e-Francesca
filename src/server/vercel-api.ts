@@ -1,10 +1,22 @@
 import Stripe from 'stripe';
 import {
+  dashboardSessionCookie,
+  expiredDashboardSessionCookie,
+  hasDashboardSession,
+  isDashboardPasswordValid,
+  isDashboardProtectionConfigured,
+} from './dashboard-auth.ts';
+import {
   RegistryStoreConfigurationError,
   loadRegistry,
   saveRegistry,
   type RegistryData,
 } from './registry-store.ts';
+import {
+  calculateApplicationFeeAmount,
+  createDestinationPaymentIntent,
+  platformMarkupCentsFromEnvironment,
+} from './stripe-destination-payments.ts';
 
 type CheckoutPayload = {
   amount: number;
@@ -247,6 +259,11 @@ async function createCheckout(request: Request): Promise<Response> {
   };
 
   const appUrl = configuredAppUrl(request);
+  const amountInCents = toCents(payload.amount);
+  const applicationFeeAmount = calculateApplicationFeeAmount(
+    amountInCents,
+    platformMarkupCentsFromEnvironment(),
+  );
   const session = await stripeClient().checkout.sessions.create({
     mode: 'payment',
     success_url: `${appUrl}/?stripe_checkout=success&session_id={CHECKOUT_SESSION_ID}`,
@@ -254,14 +271,18 @@ async function createCheckout(request: Request): Promise<Response> {
     line_items: [{
       price_data: {
         currency: payload.currency || 'eur',
-        unit_amount: toCents(payload.amount),
+        unit_amount: amountInCents,
         product_data: { name: payload.title || 'Contributo', description: payload.description },
       },
       quantity: 1,
     }],
     metadata: stripeMetadata(payload.metadata),
-    payment_intent_data: { metadata: stripeMetadata(payload.metadata) },
-  }, { stripeAccount: accountId });
+    payment_intent_data: {
+      application_fee_amount: applicationFeeAmount,
+      transfer_data: { destination: accountId },
+      metadata: stripeMetadata(payload.metadata),
+    },
+  });
   if (!session.url) throw new Error('Stripe non ha restituito l’URL di Checkout.');
   return json({ id: session.id, url: session.url });
 }
@@ -303,12 +324,17 @@ async function createPaymentIntent(request: Request): Promise<Response> {
   const settings = current.settings as Record<string, any>;
   const secretKey = process.env.STRIPE_SECRET_KEY || settings.stripeSecretKey;
   if (!secretKey) return json({ error: 'Stripe non è configurato sul server.' }, 503);
+  const destinationAccountId = settings.stripeAccountId;
+  if (typeof destinationAccountId !== 'string' || !destinationAccountId.startsWith('acct_')) {
+    return json({ error: 'Account Stripe Connect della coppia non disponibile.' }, 409);
+  }
 
-  const paymentIntent = await new Stripe(secretKey).paymentIntents.create({
+  const paymentIntent = await createDestinationPaymentIntent(new Stripe(secretKey), {
     amount: amountInCents,
     currency: typeof body.currency === 'string' ? body.currency.toLowerCase() : 'eur',
+    destinationAccountId,
+    platformMarkupCents: platformMarkupCentsFromEnvironment(),
     description: `Regalo nozze: ${body.giftTitle || 'Lista Nozze'} da ${body.guestName || 'Invitato'}`,
-    automatic_payment_methods: { enabled: true },
     metadata: {
       giftTitle: body.giftTitle || '',
       guestName: body.guestName || '',
@@ -333,6 +359,25 @@ export async function handleVercelApi(request: Request): Promise<Response> {
     if (request.method === 'GET' && pathname === '/api/health') {
       await loadRegistry();
       return json({ status: 'ok', storage: 'turso' });
+    }
+
+    if (request.method === 'GET' && pathname === '/api/dashboard/session') {
+      return json({
+        configured: isDashboardProtectionConfigured(),
+        authenticated: hasDashboardSession(request.headers.get('cookie') || undefined),
+      });
+    }
+    if (request.method === 'POST' && pathname === '/api/dashboard/login') {
+      if (!isDashboardProtectionConfigured()) return json({ error: 'Protezione dashboard non configurata.' }, 503);
+      const body = await requestJson(request);
+      if (!isDashboardPasswordValid(body.password)) return json({ error: 'Credenziali non valide.' }, 401);
+      return new Response(JSON.stringify({ authenticated: true }), {
+        status: 200,
+        headers: { ...JSON_HEADERS, 'Set-Cookie': dashboardSessionCookie() },
+      });
+    }
+    if (request.method === 'POST' && pathname === '/api/dashboard/logout') {
+      return new Response(null, { status: 204, headers: { 'Set-Cookie': expiredDashboardSessionCookie() } });
     }
 
     if (request.method === 'GET' && pathname === '/api/registry') return json(await loadRegistry());
