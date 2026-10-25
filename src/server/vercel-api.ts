@@ -17,6 +17,7 @@ import {
   createDestinationPaymentIntent,
   platformMarkupCentsFromEnvironment,
 } from './stripe-destination-payments.ts';
+import { sendDonationNotification } from './email-notifications.ts';
 
 type CheckoutPayload = {
   amount: number;
@@ -90,7 +91,7 @@ function toCents(amount: number): number {
   return cents;
 }
 
-async function saveStripeDonation(session: Stripe.Checkout.Session): Promise<void> {
+async function saveStripeDonation(session: Stripe.Checkout.Session, dashboardUrl: string): Promise<void> {
   if (session.payment_status !== 'paid') return;
 
   const current = await loadRegistry();
@@ -135,7 +136,7 @@ async function saveStripeDonation(session: Stripe.Checkout.Session): Promise<voi
     current.guests = [guest, ...(current.guests as any[])];
   }
 
-  current.donations = [{
+  const donation = {
     id: `don-stripe-${session.id}`,
     guestId: guest.id,
     guestName: guest.fullName,
@@ -150,7 +151,8 @@ async function saveStripeDonation(session: Stripe.Checkout.Session): Promise<voi
     message: metadata.message || '',
     createdAt: new Date().toISOString(),
     thankYouSent: false,
-  }, ...donations];
+  };
+  current.donations = [donation, ...donations];
 
   if (gift) {
     const giftDonations = (current.donations as any[]).filter((donation) => donation.giftId === gift.id && donation.status === 'completed');
@@ -164,6 +166,37 @@ async function saveStripeDonation(session: Stripe.Checkout.Session): Promise<voi
   }
 
   await saveRegistry(current);
+  await sendDonationNotification(donation, current.settings, dashboardUrl);
+}
+
+async function notifyNewDonations(
+  current: RegistryData,
+  submittedDonations: unknown,
+  dashboardUrl: string,
+): Promise<void> {
+  if (!Array.isArray(submittedDonations)) return;
+  const knownDonationIds = new Set(
+    (current.donations as Array<{ id?: unknown }>).map((donation) => String(donation.id || '')),
+  );
+  const newDonations = submittedDonations.filter((donation): donation is Record<string, unknown> => {
+    if (!donation || typeof donation !== 'object' || Array.isArray(donation)) return false;
+    const id = typeof donation.id === 'string' ? donation.id : '';
+    return Boolean(id) && !knownDonationIds.has(id);
+  });
+
+  await Promise.all(newDonations.map(async (donation) => {
+    await sendDonationNotification({
+      id: String(donation.id),
+      guestName: typeof donation.guestName === 'string' ? donation.guestName : undefined,
+      guestEmail: typeof donation.guestEmail === 'string' ? donation.guestEmail : undefined,
+      giftTitle: typeof donation.giftTitle === 'string' ? donation.giftTitle : undefined,
+      amount: typeof donation.amount === 'number' ? donation.amount : undefined,
+      paymentMethod: typeof donation.paymentMethod === 'string' ? donation.paymentMethod : undefined,
+      status: typeof donation.status === 'string' ? donation.status : undefined,
+      message: typeof donation.message === 'string' ? donation.message : undefined,
+      createdAt: typeof donation.createdAt === 'string' ? donation.createdAt : undefined,
+    }, current.settings, dashboardUrl);
+  }));
 }
 
 async function onboard(request: Request): Promise<Response> {
@@ -396,6 +429,9 @@ export async function handleVercelApi(request: Request): Promise<Response> {
         settings: body.settings !== undefined ? body.settings : current.settings,
       };
       const saved = await saveRegistry(updated);
+      // Mail delivery is awaited: Vercel pauses work that remains after a
+      // Function has returned its response.
+      await notifyNewDonations(current, body.donations, configuredAppUrl(request));
       return json({ success: true, version: saved.version, lastModified: saved.lastModified });
     }
 
@@ -421,7 +457,9 @@ export async function handleVercelApi(request: Request): Promise<Response> {
       const secret = process.env.STRIPE_WEBHOOK_SECRET;
       if (!signature || !secret) return json({ error: 'Webhook Stripe non configurato.' }, 503);
       const event = stripeClient().webhooks.constructEvent(await request.text(), signature, secret);
-      if (event.type === 'checkout.session.completed') await saveStripeDonation(event.data.object as Stripe.Checkout.Session);
+      if (event.type === 'checkout.session.completed') {
+        await saveStripeDonation(event.data.object as Stripe.Checkout.Session, configuredAppUrl(request));
+      }
       return json({ received: true });
     }
 
