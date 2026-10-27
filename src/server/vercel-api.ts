@@ -12,11 +12,7 @@ import {
   saveRegistry,
   type RegistryData,
 } from './registry-store.ts';
-import {
-  calculateApplicationFeeAmount,
-  createDestinationPaymentIntent,
-  platformMarkupCentsFromEnvironment,
-} from './stripe-destination-payments.ts';
+import { createDirectPaymentIntent } from './stripe-direct-payments.ts';
 import { sendDonationNotification } from './email-notifications.ts';
 
 type CheckoutPayload = {
@@ -293,10 +289,6 @@ async function createCheckout(request: Request): Promise<Response> {
 
   const appUrl = configuredAppUrl(request);
   const amountInCents = toCents(payload.amount);
-  const applicationFeeAmount = calculateApplicationFeeAmount(
-    amountInCents,
-    platformMarkupCentsFromEnvironment(),
-  );
   const session = await stripeClient().checkout.sessions.create({
     mode: 'payment',
     success_url: `${appUrl}/?stripe_checkout=success&session_id={CHECKOUT_SESSION_ID}`,
@@ -310,12 +302,8 @@ async function createCheckout(request: Request): Promise<Response> {
       quantity: 1,
     }],
     metadata: stripeMetadata(payload.metadata),
-    payment_intent_data: {
-      application_fee_amount: applicationFeeAmount,
-      transfer_data: { destination: accountId },
-      metadata: stripeMetadata(payload.metadata),
-    },
-  });
+    payment_intent_data: { metadata: stripeMetadata(payload.metadata) },
+  }, { stripeAccount: accountId });
   if (!session.url) throw new Error('Stripe non ha restituito l’URL di Checkout.');
   return json({ id: session.id, url: session.url });
 }
@@ -357,16 +345,15 @@ async function createPaymentIntent(request: Request): Promise<Response> {
   const settings = current.settings as Record<string, any>;
   const secretKey = process.env.STRIPE_SECRET_KEY || settings.stripeSecretKey;
   if (!secretKey) return json({ error: 'Stripe non è configurato sul server.' }, 503);
-  const destinationAccountId = settings.stripeAccountId;
-  if (typeof destinationAccountId !== 'string' || !destinationAccountId.startsWith('acct_')) {
+  const connectedAccountId = settings.stripeAccountId;
+  if (typeof connectedAccountId !== 'string' || !connectedAccountId.startsWith('acct_')) {
     return json({ error: 'Account Stripe Connect della coppia non disponibile.' }, 409);
   }
 
-  const paymentIntent = await createDestinationPaymentIntent(new Stripe(secretKey), {
+  const paymentIntent = await createDirectPaymentIntent(new Stripe(secretKey), {
     amount: amountInCents,
     currency: typeof body.currency === 'string' ? body.currency.toLowerCase() : 'eur',
-    destinationAccountId,
-    platformMarkupCents: platformMarkupCentsFromEnvironment(),
+    connectedAccountId,
     description: `Regalo nozze: ${body.giftTitle || 'Lista Nozze'} da ${body.guestName || 'Invitato'}`,
     metadata: {
       giftTitle: body.giftTitle || '',
