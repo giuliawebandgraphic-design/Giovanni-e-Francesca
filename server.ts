@@ -18,11 +18,7 @@ import {
   type CheckoutPayload,
 } from './src/lib/stripe-express-connect/server/index.ts';
 import { createInitialRegistry as createEmptyRegistry } from './src/server/registry-store.ts';
-import {
-  calculateApplicationFeeAmount,
-  createDestinationPaymentIntent,
-  platformMarkupCentsFromEnvironment,
-} from './src/server/stripe-destination-payments.ts';
+import { createDirectPaymentIntent } from './src/server/stripe-direct-payments.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -447,13 +443,6 @@ if (STRIPE_SECRET_KEY) {
       saveRegistry(current);
     },
     resolveAccountId: () => loadRegistry().settings?.stripeAccountId || null,
-    // The application fee refunds the platform for Stripe processing and may
-    // include an optional net markup. The Checkout router uses this value for
-    // a destination charge to the couple's Express account.
-    applicationFeeAmount: (_payload, amountInCents) => calculateApplicationFeeAmount(
-      amountInCents,
-      platformMarkupCentsFromEnvironment(),
-    ),
     validateCheckout: (_request, payload: CheckoutPayload) => {
       const current = loadRegistry();
       const giftId = payload.metadata?.giftId;
@@ -573,15 +562,14 @@ app.post('/api/stripe/create-payment-intent', async (req: Request, res: Response
       try {
         const { default: Stripe } = await import('stripe');
         const stripe = new Stripe(secretKey);
-        const destinationAccountId = settings.stripeAccountId;
-        if (typeof destinationAccountId !== 'string' || !destinationAccountId.startsWith('acct_')) {
+        const connectedAccountId = settings.stripeAccountId;
+        if (typeof connectedAccountId !== 'string' || !connectedAccountId.startsWith('acct_')) {
           return res.status(409).json({ error: 'Account Stripe Connect della coppia non disponibile.' });
         }
-        const paymentIntent = await createDestinationPaymentIntent(stripe, {
+        const paymentIntent = await createDirectPaymentIntent(stripe, {
           amount: amountInCents,
           currency: currency.toLowerCase(),
-          destinationAccountId,
-          platformMarkupCents: platformMarkupCentsFromEnvironment(),
+          connectedAccountId,
           description: `Regalo nozze: ${giftTitle || 'Lista Nozze'} da ${guestName || 'Invitato'}`,
           metadata: {
             giftTitle: giftTitle || '',
