@@ -104,7 +104,7 @@ export const GuestEmbedView: React.FC = () => {
                   {/* Dettagli del Desiderio */}
                   <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                     <div className="space-y-1.5">
-                      <h3 className="font-editorial text-[16px] font-semibold text-stone-900 leading-snug line-clamp-1">
+                      <h3 className="font-editorial text-[0.80rem] font-semibold text-stone-900 leading-snug line-clamp-1">
                         {gift.title}
                       </h3>
                       {gift.subtitle && (
