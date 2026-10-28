@@ -231,7 +231,7 @@ export const GuestRegistryView: React.FC = () => {
                         <span>{gift.contributionsCount} {gift.contributionsCount === 1 ? 'quota versata' : 'quote versate'}</span>
                       </div>
 
-                      <h3 className="font-editorial text-[16px] font-semibold text-stone-900 leading-snug">
+                      <h3 className="font-editorial text-[0.80rem] font-semibold text-stone-900 leading-snug">
                         {gift.title}
                       </h3>
                       <p className="text-xs text-stone-500 font-medium">{gift.subtitle}</p>
