@@ -126,8 +126,11 @@ test('un corpo JSON non valido riceve un errore JSON gestito', async () => {
 
 test('vercel.json inoltra ogni metodo API alla Function catch-all', async () => {
   const config = await import('../vercel.json', { with: { type: 'json' } });
-  assert.deepEqual(config.default.rewrites, [{
+  assert.deepEqual(config.default.rewrites[0], {
     source: '/api/(.*)',
     destination: '/api/[...route]',
-  }]);
+  });
+  assert.ok(config.default.rewrites.some((rewrite) =>
+    rewrite.source === '/registry' && rewrite.destination === '/index.html'
+  ));
 });

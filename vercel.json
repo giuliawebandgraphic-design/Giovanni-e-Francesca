@@ -3,6 +3,14 @@
     {
       "source": "/api/(.*)",
       "destination": "/api/[...route]"
+    },
+    {
+      "source": "/registry",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/registry/",
+      "destination": "/index.html"
     }
   ],
   "headers": [

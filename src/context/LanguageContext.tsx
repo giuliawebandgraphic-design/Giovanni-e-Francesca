@@ -4,6 +4,10 @@ type Language = 'it' | 'en';
 const LanguageContext = createContext<{ language: Language; setLanguage: (language: Language) => void }>({ language: 'it', setLanguage: () => {} });
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<Language>(() => {
+    if (window.location.pathname.replace(/\/+$/, '') === '/registry') {
+      const requested = new URLSearchParams(window.location.search).get('lang');
+      if (requested === 'it' || requested === 'en') return requested;
+    }
     try { return localStorage.getItem('registry-language') === 'en' ? 'en' : 'it'; } catch { return 'it'; }
   });
   useEffect(() => {

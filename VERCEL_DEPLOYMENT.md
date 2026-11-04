@@ -4,6 +4,21 @@ Il frontend continua a essere pubblicato da Vite. Tutte le chiamate a `/api/*`
 vengono gestite dalla Vercel Function in `api/[...route].ts`; i dati sono salvati
 in un database Turso remoto, compatibile con SQLite.
 
+## Pagina pubblica Registry
+
+La pagina dedicata è disponibile su `/registry`, per esempio
+`https://giovannifrancesca.vercel.app/registry`. Incorpora direttamente la lista
+e usa le stesse API della dashboard; il selettore in alto cambia la lingua della
+pagina e della lista. I parametri `?lang=it` e `?lang=en` permettono di scegliere
+la lingua iniziale. La dashboard e la precedente vista `?embed=true` restano
+accessibili dagli indirizzi esistenti.
+
+Dopo il deploy, verificare la pagina e aggiornare il collegamento Registry sia
+nel menu WordPress sia nella pagina RSVP su Vercel. Se necessario, configurare un
+reindirizzamento dalla vecchia pagina WordPress. Il selettore linguistico delle
+altre pagine WordPress resta indipendente. Il checkout Stripe mantiene i propri
+indirizzi di ritorno esistenti, verso la pagina principale dell'applicazione.
+
 ## Configurazione iniziale
 
 1. Nel progetto Vercel, apri **Marketplace** e installa **Turso Cloud**.

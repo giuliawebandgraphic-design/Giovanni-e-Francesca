@@ -5,7 +5,7 @@ import { GiftItem } from '../types';
 import { ContributeModal } from './ContributeModal';
 import { Gift, ArrowRight } from 'lucide-react';
 
-export const GuestEmbedView: React.FC = () => {
+export const GuestEmbedView: React.FC<{ showLanguageSelector?: boolean }> = ({ showLanguageSelector = true }) => {
   const { language, t } = useLanguage();
   const { gifts, refreshRegistry } = useRegistry();
   const [activeGiftForContribute, setActiveGiftForContribute] = useState<GiftItem | null>(null);
@@ -59,7 +59,7 @@ export const GuestEmbedView: React.FC = () => {
 
   return (
     <div className="w-full bg-transparent text-stone-900 font-sans pb-4 selection:bg-[#BCBF97]/40">
-      <LanguageSelector />
+      {showLanguageSelector && <LanguageSelector />}
       <main className="max-w-6xl mx-auto px-2 sm:px-4">
         {gifts.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-2xl border border-stone-200 p-8 space-y-3">

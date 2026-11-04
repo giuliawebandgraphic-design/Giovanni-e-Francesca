@@ -19,11 +19,17 @@ import { ThanksManager } from './components/ThanksManager';
 import { StatisticsPage } from './components/StatisticsPage';
 import { EmbedCodePage } from './components/EmbedCodePage';
 import { HomeImageManager } from './components/HomeImageManager';
+import { PublicRegistryPage } from './components/PublicRegistryPage';
 import { Heart, ShieldCheck, Code2 } from 'lucide-react';
 
 const MainContent: React.FC = () => {
   const { activeView, settings, setActiveView } = useRegistry();
   const { t } = useLanguage();
+
+  // The dedicated wedding page is independent of the saved dashboard view.
+  if (window.location.pathname.replace(/\/+$/, '') === '/registry') {
+    return <PublicRegistryPage />;
+  }
 
   // If in dedicated embed view (for iframe on external websites)
   if (activeView === 'embed_view') {
