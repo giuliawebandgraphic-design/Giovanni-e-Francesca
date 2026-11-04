@@ -31,6 +31,9 @@ export const DEMO_PRESET_GIFTS: GiftItem[] = [
   {
     id: 'gift-1',
     title: 'Soggiorno Overwater a Bora Bora',
+    titleEn: 'Overwater stay in Bora Bora',
+    subtitleEn: 'Magical nights above the turquoise lagoon',
+    descriptionEn: 'Four nights in an exclusive overwater bungalow in Bora Bora, with breakfast delivered by canoe and sunsets over Mount Otemanu.',
     subtitle: 'Notti magiche sospesi sulla laguna turchese',
     category: 'honeymoon',
     description:
@@ -47,6 +50,9 @@ export const DEMO_PRESET_GIFTS: GiftItem[] = [
   {
     id: 'gift-2',
     title: 'Set di Piatti Artigianali in Gres',
+    titleEn: 'Artisan stoneware dinner set',
+    subtitleEn: 'Handmade dinner set for 12',
+    descriptionEn: 'Hand-glazed artisan stoneware dinnerware in sand and sage tones.',
     subtitle: 'Servizio completo 12 persone fatto a mano',
     category: 'home',
     description:

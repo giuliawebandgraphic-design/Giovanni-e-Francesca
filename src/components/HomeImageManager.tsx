@@ -54,6 +54,9 @@ const PRESET_IMAGES = [
 
 export const HomeImageManager: React.FC = () => {
   const { settings, updateSettings, setActiveView } = useRegistry();
+  const [eventTitleEn, setEventTitleEn] = useState(settings.eventTitleEn || '');
+  const [welcomeMessageEn, setWelcomeMessageEn] = useState(settings.welcomeMessageEn || '');
+  const [translationsSaved, setTranslationsSaved] = useState(false);
   const [customUrl, setCustomUrl] = useState('');
   const [urlError, setUrlError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -113,6 +116,13 @@ export const HomeImageManager: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <form className="p-5 rounded-xl border border-stone-200 bg-white space-y-3" onSubmit={async e => { e.preventDefault(); await updateSettings({ eventTitleEn: eventTitleEn.trim(), welcomeMessageEn: welcomeMessageEn.trim() }); setTranslationsSaved(true); }}>
+        <h3 className="font-bold">🇬🇧 Testi della pagina in inglese</h3>
+        <p className="text-xs text-stone-600">Inserisci le traduzioni del titolo e del messaggio di benvenuto. Se vuoti, saranno mostrati i testi originali.</p>
+        <label className="block text-sm">Titolo in inglese<input value={eventTitleEn} onChange={e => { setEventTitleEn(e.target.value); setTranslationsSaved(false); }} className="mt-1 w-full rounded-lg border border-stone-300 p-2" /></label>
+        <label className="block text-sm">Messaggio di benvenuto in inglese<textarea value={welcomeMessageEn} onChange={e => { setWelcomeMessageEn(e.target.value); setTranslationsSaved(false); }} className="mt-1 w-full rounded-lg border border-stone-300 p-2" /></label>
+        <button type="submit" className="rounded-lg bg-[#636842] px-4 py-2 text-sm font-semibold text-white">Salva traduzioni</button> {translationsSaved && <span className="text-sm text-emerald-700">Salvate</span>}
+      </form>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-stone-200">
         <div>

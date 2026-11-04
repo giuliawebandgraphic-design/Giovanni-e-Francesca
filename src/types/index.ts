@@ -7,9 +7,12 @@ export type DonationStatus = 'completed' | 'pending_verification' | 'pledged';
 export interface GiftItem {
   id: string;
   title: string;
+  titleEn?: string;
   subtitle: string;
+  subtitleEn?: string;
   category: GiftCategory;
   description: string;
+  descriptionEn?: string;
   imageUrl: string;
   targetAmount: number;
   raisedAmount: number;
@@ -58,9 +61,11 @@ export interface Guest {
 export interface RegistrySettings {
   coupleNames: string;
   eventTitle: string;
+  eventTitleEn?: string;
   eventDate?: string;
   eventLocation: string;
   welcomeMessage: string;
+  welcomeMessageEn?: string;
   currency: string;
   paypalEmail: string;
   paypalMeUsername: string;

@@ -1,8 +1,10 @@
+import { useLanguage } from '../context/LanguageContext';
 import React from 'react';
 import { useRegistry } from '../context/RegistryContext';
 import { Menu, X } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
+  const { t } = useLanguage();
   const { activeView, setActiveView, settings, donations, toggleSidebar, isSidebarOpen } = useRegistry();
 
   const pendingThankYous = donations.filter((d) => !d.thankYouSent).length;
@@ -41,7 +43,7 @@ export const Navbar: React.FC = () => {
                 <Menu className="w-5 h-5 text-[#636842]" />
               )}
               <span className="text-xs font-bold text-stone-900 tracking-wide uppercase">
-                Menù
+                {t("Menù", "Menu")}
               </span>
             </button>
 
@@ -61,7 +63,7 @@ export const Navbar: React.FC = () => {
                 onClick={() => setActiveView('organizer_dashboard')}
                 className="px-3 py-1.5 bg-[#636842] hover:bg-[#525636] text-white text-xs font-semibold rounded-xl shadow-2xs transition-colors cursor-pointer flex items-center gap-1.5"
               >
-                <span>Dashboard Sposi</span>
+                <span>{t("Dashboard Sposi", "Couple dashboard")}</span>
               </button>
             ) : (
               <button
@@ -69,7 +71,7 @@ export const Navbar: React.FC = () => {
                 onClick={() => setActiveView('embed_view')}
                 className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-stone-100 text-stone-800 border border-stone-300 text-xs font-semibold rounded-xl shadow-2xs transition-colors cursor-pointer"
               >
-                <span>Anteprima Lista</span>
+                <span>{t("Anteprima Lista", "Registry preview")}</span>
               </button>
             )}
 
@@ -79,8 +81,8 @@ export const Navbar: React.FC = () => {
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-stone-800 hover:text-stone-950 bg-[#BCBF97]/25 hover:bg-[#BCBF97]/40 border border-[#BCBF97] rounded-xl transition-all shadow-2xs cursor-pointer"
               title="Apri tutte le voci del pannello sposi"
             >
-              <span className="hidden xs:inline">Tutte le Voci</span>
-              <span className="xs:hidden">Sezioni</span>
+              <span className="hidden xs:inline">{t("Tutte le Voci", "All sections")}</span>
+              <span className="xs:hidden">{t("Sezioni", "Sections")}</span>
               <span className="text-stone-400">&rarr;</span>
             </button>
           </div>

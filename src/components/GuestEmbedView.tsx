@@ -1,3 +1,4 @@
+import { LanguageSelector, useLanguage } from '../context/LanguageContext';
 import React, { useState, useEffect } from 'react';
 import { useRegistry } from '../context/RegistryContext';
 import { GiftItem } from '../types';
@@ -5,6 +6,7 @@ import { ContributeModal } from './ContributeModal';
 import { Gift, ArrowRight } from 'lucide-react';
 
 export const GuestEmbedView: React.FC = () => {
+  const { language, t } = useLanguage();
   const { gifts, refreshRegistry } = useRegistry();
   const [activeGiftForContribute, setActiveGiftForContribute] = useState<GiftItem | null>(null);
 
@@ -57,11 +59,12 @@ export const GuestEmbedView: React.FC = () => {
 
   return (
     <div className="w-full bg-transparent text-stone-900 font-sans pb-4 selection:bg-[#BCBF97]/40">
+      <LanguageSelector />
       <main className="max-w-6xl mx-auto px-2 sm:px-4">
         {gifts.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-2xl border border-stone-200 p-8 space-y-3">
             <Gift className="w-10 h-10 text-stone-300 mx-auto" />
-            <p className="text-stone-600 text-sm font-medium">Non ci sono ancora desideri da mostrare.</p>
+            <p className="text-stone-600 text-sm font-medium">{t('Non ci sono ancora desideri da mostrare.', 'There are no gifts to show yet.')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -83,20 +86,20 @@ export const GuestEmbedView: React.FC = () => {
                   <div className="relative aspect-[3/4] overflow-hidden bg-stone-100">
                     <img
                       src={gift.imageUrl}
-                      alt={gift.title}
+                      alt={language === 'en' ? (gift.titleEn || gift.title) : gift.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-103"
                       loading="lazy"
                     />
 
                     {gift.isPriority && (
                       <div className="absolute top-3 left-3 px-2.5 py-1 bg-[#FFE68A] text-stone-900 rounded-full text-[11px] font-bold shadow-2xs">
-                        In Evidenza
+                        {t('In Evidenza', 'Featured')}
                       </div>
                     )}
 
                     {isCompleted && (
                       <div className="absolute top-3 right-3 px-2.5 py-1 bg-emerald-700/90 text-white text-[11px] font-bold rounded-full shadow-2xs backdrop-blur-xs flex items-center gap-1">
-                        <span>Obiettivo 100% ✓</span>
+                        <span>{t('Obiettivo 100% ✓', 'Goal reached ✓')}</span>
                       </div>
                     )}
                   </div>
@@ -105,13 +108,13 @@ export const GuestEmbedView: React.FC = () => {
                   <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                     <div className="space-y-1.5">
                       <h3 className="font-editorial text-[0.80rem] font-semibold text-stone-900 leading-snug line-clamp-1">
-                        {gift.title}
+                        {language === 'en' ? (gift.titleEn || gift.title) : gift.title}
                       </h3>
                       {gift.subtitle && (
-                        <p className="text-xs text-stone-500 line-clamp-1">{gift.subtitle}</p>
+                        <p className="text-xs text-stone-500 line-clamp-1">{language === 'en' ? (gift.subtitleEn || gift.subtitle) : gift.subtitle}</p>
                       )}
                       {gift.description && (
-                        <p className="text-xs text-stone-600 line-clamp-2 pt-1">{gift.description}</p>
+                        <p className="text-xs text-stone-600 line-clamp-2 pt-1">{language === 'en' ? (gift.descriptionEn || gift.description) : gift.description}</p>
                       )}
                     </div>
 
@@ -119,7 +122,7 @@ export const GuestEmbedView: React.FC = () => {
                     <div className="space-y-3 pt-3 border-t border-stone-100">
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-stone-500 font-medium">
-                          {gift.isInfiniteQuota ? 'Quota libera' : 'Avanzamento'}
+                          {gift.isInfiniteQuota ? t('Quota libera', 'Any amount') : t('Avanzamento', 'Progress')}
                         </span>
                         {!gift.isInfiniteQuota && (
                           <span className="font-bold text-[#636842] tabular-nums text-sm">
@@ -142,7 +145,7 @@ export const GuestEmbedView: React.FC = () => {
                         onClick={() => setActiveGiftForContribute(gift)}
                         className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 bg-[#636842] hover:bg-[#525636] text-white shadow-xs transition-colors cursor-pointer"
                       >
-                        <span>Contributo libero</span>
+                        <span>{t('Contributo libero', 'Give any amount')}</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </div>

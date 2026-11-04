@@ -18,6 +18,7 @@ import { sendDonationNotification } from './email-notifications.ts';
 type CheckoutPayload = {
   amount: number;
   currency?: string;
+  locale?: 'it' | 'en';
   title?: string;
   description?: string;
   metadata?: Record<string, string>;
@@ -274,7 +275,8 @@ async function createCheckout(request: Request): Promise<Response> {
   const payload: CheckoutPayload = {
     amount,
     currency: 'eur',
-    title: isWeddingFund ? WEDDING_FUND_TITLE : `Regalo nozze: ${gift.title}`,
+    locale: body.locale === 'en' ? 'en' : 'it',
+    title: body.locale === 'en' ? (isWeddingFund ? 'A gift for the couple' : `Wedding gift: ${gift.titleEn || gift.title}`) : (isWeddingFund ? WEDDING_FUND_TITLE : `Regalo nozze: ${gift.title}`),
     description: `Contributo per ${settings.coupleNames || 'gli sposi'}`,
     metadata: {
       giftId: isWeddingFund ? WEDDING_FUND_GIFT_ID : gift.id,
@@ -291,6 +293,7 @@ async function createCheckout(request: Request): Promise<Response> {
   const amountInCents = toCents(payload.amount);
   const session = await stripeClient().checkout.sessions.create({
     mode: 'payment',
+    locale: payload.locale === 'en' ? 'en' : 'it',
     success_url: `${appUrl}/?stripe_checkout=success&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appUrl}/?stripe_checkout=cancelled`,
     line_items: [{

@@ -31,6 +31,9 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
   const { addGift, updateGift, settings } = useRegistry();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [titleEn, setTitleEn] = useState(giftToEdit?.titleEn || '');
+  const [subtitleEn, setSubtitleEn] = useState(giftToEdit?.subtitleEn || '');
+  const [descriptionEn, setDescriptionEn] = useState(giftToEdit?.descriptionEn || '');
   const [title, setTitle] = useState<string>(giftToEdit?.title || '');
   const [subtitle, setSubtitle] = useState<string>(giftToEdit?.subtitle || '');
   const [category, setCategory] = useState<GiftCategory>(giftToEdit?.category || 'honeymoon');
@@ -77,6 +80,9 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
     if (giftToEdit) {
       updateGift(giftToEdit.id, {
         title: title.trim(),
+        titleEn: titleEn.trim(),
+        subtitleEn: subtitleEn.trim(),
+        descriptionEn: descriptionEn.trim(),
         subtitle: subtitle.trim(),
         category,
         description: description.trim(),
@@ -88,6 +94,9 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
     } else {
       addGift({
         title: title.trim(),
+        titleEn: titleEn.trim(),
+        subtitleEn: subtitleEn.trim(),
+        descriptionEn: descriptionEn.trim(),
         subtitle: subtitle.trim(),
         category,
         description: description.trim(),
@@ -134,6 +143,13 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
 
         {/* Form Body - Horizontal Two Column Layout */}
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-y-auto">
+          <div className="mx-6 mt-5 p-4 rounded-xl bg-stone-50 border border-stone-200 space-y-3">
+            <p className="text-sm font-bold">🇬🇧 Traduzioni in inglese del regalo</p>
+            <p className="text-xs text-stone-600">Se lasciati vuoti, verranno mostrati i testi italiani.</p>
+            <input aria-label="Titolo in inglese" placeholder="Titolo in inglese" value={titleEn} onChange={e => setTitleEn(e.target.value)} className="w-full rounded-lg border border-stone-300 bg-white p-2 text-sm" />
+            <input aria-label="Sottotitolo in inglese" placeholder="Sottotitolo in inglese" value={subtitleEn} onChange={e => setSubtitleEn(e.target.value)} className="w-full rounded-lg border border-stone-300 bg-white p-2 text-sm" />
+            <textarea aria-label="Descrizione in inglese" placeholder="Descrizione in inglese" value={descriptionEn} onChange={e => setDescriptionEn(e.target.value)} className="w-full rounded-lg border border-stone-300 bg-white p-2 text-sm" />
+          </div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 items-start">
             
             {/* LEFT COLUMN: Image & Visual Card Preview (5 cols) */}

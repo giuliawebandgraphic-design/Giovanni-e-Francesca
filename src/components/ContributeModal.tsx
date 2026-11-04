@@ -1,3 +1,4 @@
+import { useLanguage } from '../context/LanguageContext';
 import React, { useState } from 'react';
 import { GiftItem, PaymentMethod, Guest } from '../types';
 import { useRegistry } from '../context/RegistryContext';
@@ -15,6 +16,7 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
   onClose,
   defaultGuestId,
 }) => {
+  const { language, t } = useLanguage();
   const { settings, guests, recordDonation } = useRegistry();
 
   if (!gift) return null;
@@ -112,10 +114,10 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
         <div className="flex items-center justify-between px-6 py-4 bg-stone-50 border-b border-stone-200">
           <div>
             <span className="text-xs uppercase tracking-wider text-[#636842] font-bold">
-              Partecipa al Regalo
+              {t("Partecipa al Regalo", "Contribute to this gift")}
             </span>
             <h3 className="font-editorial text-xl font-semibold text-stone-900 leading-tight">
-              {gift.title}
+              {language === 'en' ? (gift.titleEn || gift.title) : gift.title}
             </h3>
           </div>
           <button
@@ -134,18 +136,18 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
               <div className="flex items-center gap-4 p-3.5 bg-stone-50 rounded-xl border border-stone-100">
                 <img
                   src={gift.imageUrl}
-                  alt={gift.title}
+                  alt={language === 'en' ? (gift.titleEn || gift.title) : gift.title}
                   className="w-16 aspect-[3/4] rounded-lg object-cover border border-stone-200 shrink-0"
                   referrerPolicy="no-referrer"
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-stone-500 line-clamp-1">{gift.subtitle}</p>
+                  <p className="text-xs text-stone-500 line-clamp-1">{language === 'en' ? (gift.subtitleEn || gift.subtitle) : gift.subtitle}</p>
                   <div className="mt-2 space-y-1.5">
                     <div className="flex items-baseline justify-between text-xs">
-                      <span className="text-stone-500 font-medium">Prezzo totale:</span>
+                      <span className="text-stone-500 font-medium">{t("Prezzo totale:", "Total price:")}</span>
                       <span className="font-bold text-stone-900 tabular-nums text-sm">
                         {gift.isInfiniteQuota
-                          ? 'Quota libera'
+                          ? t('Quota libera', 'Any amount')
                           : `${settings.currency}${gift.targetAmount.toLocaleString()}`}
                       </span>
                     </div>
@@ -164,10 +166,10 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
               {/* 1. Scegli quanto versare (Cifra completamente libera) */}
               <div>
                 <label className="block text-sm font-semibold text-stone-900 mb-1.5">
-                  1. Quanto desideri donare? (Cifra libera)
+                  {t("1. Quanto desideri donare? (Cifra libera)", "1. How much would you like to give?")}
                 </label>
                 <p className="text-xs text-stone-500 mb-2.5">
-                  Non ci sono quote preimpostate: inserisci l'importo esatto che desideri donare.
+                  {t("Non ci sono quote preimpostate: inserisci l'importo esatto che desideri donare.", "There are no preset amounts: enter the exact amount you wish to give.")}
                 </p>
 
                 <div className="relative">
@@ -178,7 +180,7 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
                     type="number"
                     min="1"
                     step="1"
-                    placeholder="Es. 75, 120, 250..."
+                    placeholder={t("Es. 75, 120, 250...", "E.g. 75, 120, 250...")}
                     value={customAmount}
                     onChange={(e) => setCustomAmount(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-stone-50 border border-stone-300 rounded-xl text-stone-900 font-bold text-2xl focus:outline-none focus:ring-2 focus:ring-[#BCBF97] focus:border-[#BCBF97]"
@@ -192,7 +194,7 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-sm font-semibold text-stone-900">
-                    2. I tuoi dati
+                    {t("2. I tuoi dati", "2. Your details")}
                   </label>
                 </div>
 
@@ -204,7 +206,7 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
                       className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#BCBF97]"
                       required
                     >
-                      <option value="">-- Seleziona il tuo nome --</option>
+                      <option value="">{t("-- Seleziona il tuo nome --", "-- Select your name --")}</option>
                       {guests.map((g) => (
                         <option key={g.id} value={g.id}>
                           {g.fullName} ({g.group})
@@ -217,7 +219,7 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
                     <div>
                       <input
                         type="text"
-                        placeholder="Nome e Cognome *"
+                        placeholder={t("Nome e Cognome *", "Full name *")}
                         value={guestName}
                         onChange={(e) => setGuestName(e.target.value)}
                         className="w-full px-3.5 py-2 bg-stone-50 border border-stone-300 rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#BCBF97]"
@@ -227,7 +229,7 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
                     <div>
                       <input
                         type="email"
-                        placeholder="Email (per conferma) *"
+                        placeholder={t("Email (per conferma) *", "Email (for confirmation) *")}
                         value={guestEmail}
                         onChange={(e) => setGuestEmail(e.target.value)}
                         className="w-full px-3.5 py-2 bg-stone-50 border border-stone-300 rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#BCBF97]"
@@ -241,11 +243,11 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
               {/* 3. Messaggio di Auguri per gli sposi */}
               <div>
                 <label className="block text-sm font-semibold text-stone-900 mb-1.5">
-                  3. Dedica e auguri per gli sposi
+                  {t("3. Dedica e auguri per gli sposi", "3. Your message to the couple")}
                 </label>
                 <textarea
                   rows={2}
-                  placeholder="Scrivi qui le tue parole d'affetto per accompagnare il tuo dono..."
+                  placeholder={t("Scrivi qui le tue parole d'affetto per accompagnare il tuo dono...", "Write a message to accompany your gift...")}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   className="w-full px-3.5 py-2 bg-stone-50 border border-stone-300 rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#BCBF97]"
@@ -259,7 +261,7 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
                   disabled={activeAmount <= 0}
                   className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-[#636842] hover:bg-[#525636] disabled:opacity-50 text-white font-semibold rounded-xl transition-all shadow-md cursor-pointer"
                 >
-                  <span>Continua con la quota di {settings.currency}{activeAmount}</span>
+                  <span>{t('Continua con la quota di', 'Continue with')} {settings.currency}{activeAmount}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -271,15 +273,15 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
             <div className="space-y-6">
               <div className="p-4 bg-stone-50 rounded-xl border border-stone-200">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-stone-600">Regalo scelto:</span>
-                  <span className="font-semibold text-stone-900">{gift.title}</span>
+                  <span className="text-stone-600">{t("Regalo scelto:", "Selected gift:")}</span>
+                  <span className="font-semibold text-stone-900">{language === 'en' ? (gift.titleEn || gift.title) : gift.title}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm mt-1.5">
-                  <span className="text-stone-600">Donatore:</span>
+                  <span className="text-stone-600">{t("Donatore:", "From:")}</span>
                   <span className="font-medium text-stone-900">{guestName}</span>
                 </div>
                 <div className="flex items-center justify-between text-base mt-2 pt-2 border-t border-stone-200 font-bold">
-                  <span className="text-stone-900">Importo da versare:</span>
+                  <span className="text-stone-900">{t("Importo da versare:", "Amount:")}</span>
                   <span className="text-xl tabular-nums text-[#4f5333]">
                     {settings.currency}{activeAmount}
                   </span>
@@ -289,7 +291,7 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
               {/* Payment method selector */}
               <div>
                 <label className="block text-sm font-semibold text-stone-900 mb-3">
-                  Seleziona come desideri effettuare il versamento:
+                  {t("Seleziona come desideri effettuare il versamento:", "Choose how you would like to pay:")}
                 </label>
                 <div className="space-y-3">
                   {/* Stripe Card option */}
@@ -313,14 +315,14 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
                         <div className="flex items-center justify-between">
                           <span className="font-semibold text-stone-900 text-sm flex items-center gap-1.5">
                             <CreditCard className="w-4 h-4 text-emerald-700" />
-                            <span>Carta di Credito o Debito (Stripe)</span>
+                            <span>{t("Carta di Credito o Debito (Stripe)", "Credit or debit card (Stripe)")}</span>
                           </span>
                           <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
                             Visa / MC / Amex
                           </span>
                         </div>
                         <p className="text-xs text-stone-600 mt-1">
-                          Paga direttamente con la tua carta in sicurezza. Nessun account richiesto.
+                          {t("Paga direttamente con la tua carta in sicurezza. Nessun account richiesto.", "Pay securely with your card. No account required.")}
                         </p>
                       </div>
                     </div>
@@ -345,10 +347,10 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
                       />
                       <div className="flex-1">
                         <span className="font-semibold text-stone-900 text-sm">
-                          Bonifico Bancario
+                          {t("Bonifico Bancario", "Bank transfer")}
                         </span>
                         <p className="text-xs text-stone-600 mt-1">
-                          Riceverai le coordinate IBAN e la causale personalizzata con il codice riferimento.
+                          {t("Riceverai le coordinate IBAN e la causale personalizzata con il codice riferimento.", "You will receive the bank details and a payment reference.")}
                         </p>
                       </div>
                     </div>
@@ -362,7 +364,7 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs font-bold text-stone-900">
                       <CreditCard className="w-4 h-4 text-emerald-700" />
-                      <span>Checkout sicuro Stripe</span>
+                      <span>{t("Checkout sicuro Stripe", "Secure Stripe Checkout")}</span>
                     </div>
                     <span className="text-[10px] font-mono text-stone-500 bg-white px-2 py-0.5 rounded border border-stone-200">
                       Stripe TLS 256-bit
@@ -370,18 +372,20 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
                   </div>
 
                   <p className="text-xs text-stone-600 leading-relaxed">
-                    I dati della carta non transitano dal sito: Stripe gestisce il pagamento e accredita il contributo direttamente sul conto degli sposi.
+                    {t("I dati della carta non transitano dal sito: Stripe gestisce il pagamento e accredita il contributo direttamente sul conto degli sposi.", "Your card details do not pass through this site. Stripe processes the payment directly to the couple’s account.")}
                   </p>
                   <ExpressCheckoutButton
                     accountId={settings.stripeAccountId || 'connected-account'}
                     amount={activeAmount}
                     currency="eur"
+                    locale={language}
+                    loadingLabel={t('Reindirizzamento…', 'Opening checkout…')}
                     metadata={stripeCheckoutMetadata}
-                    onError={(error) => setStripeCheckoutError(error.message)}
+                    onError={(error) => setStripeCheckoutError(language === 'en' ? 'Unable to open checkout. Please check that pop-ups are allowed and try again.' : error.message)}
                     className="w-full py-3 px-5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <ShieldCheck className="w-4 h-4" />
-                    <span>Vai al Checkout Stripe · {settings.currency}{activeAmount}</span>
+                    <span>{t('Vai al Checkout Stripe', 'Go to Stripe Checkout')} · {settings.currency}{activeAmount}</span>
                   </ExpressCheckoutButton>
                 </div>
               )}
@@ -402,7 +406,7 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
                       className="flex items-center gap-1 text-[11px] font-bold text-[#555a38] hover:text-stone-950 cursor-pointer"
                     >
                       <Copy className="w-3 h-3" />
-                      <span>{copiedIban ? 'Copiato!' : 'Copia IBAN'}</span>
+                      <span>{copiedIban ? t('Copiato!', 'Copied!') : t('Copia IBAN', 'Copy IBAN')}</span>
                     </button>
                   </div>
                   <p className="font-mono text-xs font-semibold text-stone-900 bg-white p-2 rounded border border-[#BCBF97]">
@@ -410,18 +414,18 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
                   </p>
                   <div className="grid grid-cols-2 gap-1 pt-1 text-[11px]">
                     <div>
-                      <span className="text-stone-500">Intestatario:</span>{' '}
+                      <span className="text-stone-500">{t("Intestatario:", "Account holder:")}</span>{' '}
                       <span className="font-medium text-stone-800">{settings.bankAccountHolder}</span>
                     </div>
                     <div>
-                      <span className="text-stone-500">Banca:</span>{' '}
+                      <span className="text-stone-500">{t("Banca:", "Bank:")}</span>{' '}
                       <span className="font-medium text-stone-800">{settings.bankName}</span>
                     </div>
                   </div>
                   <div className="pt-1 text-[11px]">
-                    <span className="text-stone-500">Causale consigliata:</span>{' '}
+                    <span className="text-stone-500">{t("Causale consigliata:", "Suggested payment reference:")}</span>{' '}
                     <span className="font-mono font-medium text-stone-900">
-                      Regalo Nozze {settings.coupleNames} - {referenceCode} - {guestName}
+                      {t('Regalo Nozze', 'Wedding gift')} {settings.coupleNames} - {referenceCode} - {guestName}
                     </span>
                   </div>
                 </div>
@@ -434,7 +438,7 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
                   onClick={() => setStep('amount_and_info')}
                   className="py-3 px-4 text-xs font-medium text-stone-600 hover:text-stone-900 rounded-xl border border-stone-200 hover:bg-stone-50 transition-colors cursor-pointer"
                 >
-                  Indietro
+                  {t("Indietro", "Back")}
                 </button>
                 {paymentMethod !== 'apple_pay' && paymentMethod !== 'stripe' && (
                   <button
@@ -444,11 +448,11 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
                     className="flex-1 py-3 px-4 bg-[#636842] hover:bg-[#525636] text-white font-semibold text-sm rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
-                      <span>Registrazione in corso...</span>
+                      <span>{t("Registrazione in corso...", "Recording...")}</span>
                     ) : (
                       <>
                         <CheckCircle2 className="w-4 h-4 text-[#BCBF97]" />
-                        <span>Conferma e Registra Donazione ({settings.currency}{activeAmount})</span>
+                        <span>{t('Conferma e Registra Donazione', 'Confirm and record gift')} ({settings.currency}{activeAmount})</span>
                       </>
                     )}
                   </button>
@@ -466,15 +470,15 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
 
               <div>
                 <span className="text-xs uppercase tracking-widest text-[#555a38] font-bold">
-                  Grazie di Cuore!
+                  {t("Grazie di Cuore!", "Thank you so much!")}
                 </span>
                 <h4 className="font-editorial text-2xl font-bold text-stone-900 mt-1">
-                  Il tuo dono è stato registrato
+                  {t("Il tuo dono è stato registrato", "Your gift has been recorded")}
                 </h4>
                 <p className="text-xs text-stone-600 max-w-md mx-auto mt-2 leading-relaxed">
-                  Caro/a <strong>{guestName}</strong>, il tuo contributo di{' '}
-                  <strong className="text-stone-900">{settings.currency}{activeAmount}</strong> per{' '}
-                  <strong>"{gift.title}"</strong> è stato aggiunto con successo alla lista regali.
+                  {t('Caro/a', 'Dear')} <strong>{guestName}</strong>, {t('il tuo contributo di', 'your gift of')}{' '}
+                  <strong className="text-stone-900">{settings.currency}{activeAmount}</strong> {t('per', 'for')}{' '}
+                  <strong>"{language === 'en' ? (gift.titleEn || gift.title) : gift.title}"</strong> {t('è stato aggiunto con successo alla lista regali.', 'has been added to the gift list.')}
                 </p>
               </div>
 
@@ -482,7 +486,7 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
               {message && (
                 <div className="p-4 bg-stone-50 rounded-xl border border-stone-200 text-left max-w-md mx-auto">
                   <span className="text-[10px] uppercase font-bold text-stone-400">
-                    Il tuo messaggio per gli sposi:
+                    {t("Il tuo messaggio per gli sposi:", "Your message to the couple:")}
                   </span>
                   <p className="font-editorial italic text-stone-800 text-sm mt-1">
                     "{message}"
@@ -496,7 +500,7 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
                   onClick={onClose}
                   className="py-2.5 px-6 bg-[#636842] hover:bg-[#525636] text-white font-medium text-xs rounded-xl transition-colors cursor-pointer"
                 >
-                  Torna alla Lista Regali
+                  {t("Torna alla Lista Regali", "Back to the gift list")}
                 </button>
               </div>
             </div>

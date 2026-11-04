@@ -5,6 +5,7 @@ export interface CheckoutPayload {
   accountId?: string;
   amount: number;
   currency?: string;
+  locale?: 'it' | 'en';
   title?: string;
   description?: string;
   metadata?: Record<string, string>;
@@ -111,6 +112,7 @@ export function createStripeExpressConnectRouter(options: StripeExpressConnectOp
 
       const session = await stripe.checkout.sessions.create({
         mode: 'payment',
+        locale: payload.locale === 'en' ? 'en' : 'it',
         success_url: options.checkout.successUrl.includes('{CHECKOUT_SESSION_ID}') ? options.checkout.successUrl : `${options.checkout.successUrl}${options.checkout.successUrl.includes('?') ? '&' : '?'}session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: options.checkout.cancelUrl,
         line_items: [{ price_data: { currency: (payload.currency || 'eur').toLowerCase(), unit_amount: amount, product_data: { name: payload.title || 'Contributo', description: payload.description } }, quantity: 1 }],

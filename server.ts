@@ -455,10 +455,11 @@ if (STRIPE_SECRET_KEY) {
       return {
         amount,
         currency: 'eur',
-        title: isWeddingFund ? WEDDING_FUND_TITLE : `Regalo nozze: ${gift.title}`,
+        locale: payload.locale === 'en' ? 'en' : 'it',
+        title: payload.locale === 'en' ? (isWeddingFund ? 'A gift for the couple' : `Wedding gift: ${gift.titleEn || gift.title}`) : (isWeddingFund ? WEDDING_FUND_TITLE : `Regalo nozze: ${gift.title}`),
         description: `Contributo per ${current.settings?.coupleNames || 'gli sposi'}`,
         metadata: {
-          giftId: gift.id,
+          giftId: isWeddingFund ? WEDDING_FUND_GIFT_ID : gift.id,
           guestId: payload.metadata?.guestId || '',
           guestName: payload.metadata?.guestName || '',
           guestEmail: payload.metadata?.guestEmail || '',

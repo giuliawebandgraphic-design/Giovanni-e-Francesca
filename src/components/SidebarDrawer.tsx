@@ -1,8 +1,10 @@
+import { useLanguage } from '../context/LanguageContext';
 import React, { useEffect } from 'react';
 import { useRegistry, AppView } from '../context/RegistryContext';
 import { X, Check, Copy } from 'lucide-react';
 
 export const SidebarDrawer: React.FC = () => {
+  const { t } = useLanguage();
   const {
     isSidebarOpen,
     setIsSidebarOpen,
@@ -74,7 +76,7 @@ export const SidebarDrawer: React.FC = () => {
           <div className="flex items-start justify-between">
             <div>
               <span className="text-[10px] uppercase tracking-widest text-[#636842] font-bold block mb-0.5">
-                Lista Nozze
+                {t("Lista Nozze", "Wedding registry")}
               </span>
               <h3 className="text-base font-bold text-stone-900 leading-snug">
                 {settings.coupleNames}
@@ -96,7 +98,7 @@ export const SidebarDrawer: React.FC = () => {
 
           {/* Progress pill */}
           <div className="mt-4 pt-3 border-t border-stone-200/60 flex items-center justify-between text-xs">
-            <span className="text-stone-600 font-medium">Raccolta totale:</span>
+            <span className="text-stone-600 font-medium">{t("Raccolta totale:", "Total raised:")}</span>
             <div className="flex items-center gap-2">
               <span className="font-bold text-stone-900 tabular-nums">
                 {settings.currency}{totalRaised.toLocaleString()}
@@ -113,7 +115,7 @@ export const SidebarDrawer: React.FC = () => {
           {/* Section: Vista Pubblica & Embed */}
           <div className="space-y-1">
             <span className="text-[10px] uppercase tracking-wider text-[#636842] font-bold px-3 block mb-1">
-              Anteprima per gli Invitati
+              {t("Anteprima per gli Invitati", "Guest preview")}
             </span>
 
             {/* Vista Dedicata Solo Iframe */}
@@ -129,19 +131,19 @@ export const SidebarDrawer: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div className="text-sm font-bold text-stone-900">
                   {activeView === 'embed_view' ? (
-                    <span className="text-white">Pagina Lista Nozze (Per Iframe)</span>
+                    <span className="text-white">{t("Pagina Lista Nozze (Per Iframe)", "Wedding registry page (iframe)")}</span>
                   ) : (
-                    <span>Pagina Lista Nozze (Per Iframe)</span>
+                    <span>{t("Pagina Lista Nozze (Per Iframe)", "Wedding registry page (iframe)")}</span>
                   )}
                 </div>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                   activeView === 'embed_view' ? 'bg-white/20 text-white' : 'bg-[#636842] text-white'
                 }`}>
-                  Senza Menù
+                  {t("Senza Menù", "Without menu")}
                 </span>
               </div>
               <div className={`text-xs mt-0.5 ${activeView === 'embed_view' ? 'text-stone-200' : 'text-stone-600'}`}>
-                Visualizzazione pulita da incorporare nel sito degli sposi
+                {t("Visualizzazione pulita da incorporare nel sito degli sposi", "A clean view to embed on the couple’s website")}
               </div>
             </button>
           </div>
@@ -150,7 +152,7 @@ export const SidebarDrawer: React.FC = () => {
           <div className="space-y-1">
             <div className="flex items-center justify-between px-3 mb-1">
               <span className="text-[10px] uppercase tracking-wider text-[#636842] font-bold block">
-                Dashboard Sposi
+                {t("Dashboard Sposi", "Couple dashboard")}
               </span>
               <span className="w-2 h-2 rounded-full bg-[#BCBF97]"></span>
             </div>
@@ -165,9 +167,9 @@ export const SidebarDrawer: React.FC = () => {
                   : 'text-stone-800 hover:bg-stone-100 hover:text-stone-950'
               }`}
             >
-              <div className="text-sm font-semibold">Panoramica Dashboard</div>
+              <div className="text-sm font-semibold">{t("Panoramica Dashboard", "Dashboard overview")}</div>
               <div className={`text-xs mt-0.5 ${activeView === 'organizer_dashboard' ? 'text-stone-200' : 'text-stone-500'}`}>
-                Riepilogo generale e avanzamento
+                {t("Riepilogo generale e avanzamento", "Overview and progress")}
               </div>
             </button>
 
@@ -181,9 +183,9 @@ export const SidebarDrawer: React.FC = () => {
                   : 'text-stone-800 hover:bg-[#BCBF97]/20 hover:text-stone-950'
               }`}
             >
-              <div className="text-sm font-semibold">Gestisci Lista</div>
+              <div className="text-sm font-semibold">{t("Gestisci Lista", "Manage registry")}</div>
               <div className={`text-xs mt-0.5 ${activeView === 'organizer_gifts' ? 'text-stone-200' : 'text-stone-500'}`}>
-                {gifts.length} desideri · quote libere
+                {gifts.length} {t('desideri · quote libere', 'gifts · any amount')}
               </div>
             </button>
 
@@ -197,9 +199,9 @@ export const SidebarDrawer: React.FC = () => {
                   : 'text-stone-800 hover:bg-[#A6C1D8]/25 hover:text-stone-950'
               }`}
             >
-              <div className="text-sm font-semibold">Gestisci Pagamenti</div>
+              <div className="text-sm font-semibold">{t("Gestisci Pagamenti", "Manage payments")}</div>
               <div className={`text-xs mt-0.5 ${activeView === 'organizer_paypal' ? 'text-stone-200' : 'text-stone-500'}`}>
-                Carta con Stripe e bonifico IBAN
+                {t("Carta con Stripe e bonifico IBAN", "Card via Stripe and bank transfer")}
               </div>
             </button>
 
@@ -214,15 +216,15 @@ export const SidebarDrawer: React.FC = () => {
               }`}
             >
               <div className="flex items-center justify-between">
-                <div className="text-sm font-semibold">Gestisci Ringraziamenti</div>
+                <div className="text-sm font-semibold">{t("Gestisci Ringraziamenti", "Manage thank you notes")}</div>
                 {pendingThankYous > 0 && (
                   <span className="px-2 py-0.5 text-[10px] font-bold text-stone-900 bg-[#FFE68A] rounded-full border border-amber-300">
-                    {pendingThankYous} in attesa
+                    {pendingThankYous} {t('in attesa', 'pending')}
                   </span>
                 )}
               </div>
               <div className={`text-xs mt-0.5 ${activeView === 'organizer_thanks' ? 'text-stone-200' : 'text-stone-500'}`}>
-                WhatsApp, Email e dediche personalizzate
+                {t("WhatsApp, Email e dediche personalizzate", "WhatsApp, email and personalised messages")}
               </div>
             </button>
           </div>
@@ -230,7 +232,7 @@ export const SidebarDrawer: React.FC = () => {
           {/* Section: Codice per il Sito */}
           <div className="space-y-1 pt-2">
             <span className="text-[10px] uppercase tracking-wider text-stone-400 font-bold px-3 block mb-1">
-              Integrazione Sito Nozze
+              {t("Integrazione Sito Nozze", "Wedding website integration")}
             </span>
             <button
               type="button"
@@ -241,9 +243,9 @@ export const SidebarDrawer: React.FC = () => {
                   : 'bg-[#FFE68A]/20 hover:bg-[#FFE68A]/35 text-stone-900 border-[#FFE68A]'
               }`}
             >
-              <div className="text-sm font-semibold">Codice per il Tuo Sito</div>
+              <div className="text-sm font-semibold">{t("Codice per il Tuo Sito", "Code for your website")}</div>
               <div className={`text-xs mt-0.5 ${activeView === 'organizer_embed' ? 'text-stone-200' : 'text-stone-600'}`}>
-                Copia codice iframe, widget e link per il sito
+                {t("Copia codice iframe, widget e link per il sito", "Copy iframe code, widget and website link")}
               </div>
             </button>
           </div>
@@ -252,7 +254,7 @@ export const SidebarDrawer: React.FC = () => {
         {/* Sidebar Footer */}
         <div className="p-4 bg-stone-50 border-t border-stone-200 space-y-3">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-stone-500">Link pubblico lista:</span>
+            <span className="text-stone-500">{t("Link pubblico lista:", "Public registry link:")}</span>
             <button
               type="button"
               onClick={handleCopyRegistryLink}
@@ -261,12 +263,12 @@ export const SidebarDrawer: React.FC = () => {
               {copiedLink ? (
                 <>
                   <Check className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Copiato!</span>
+                  <span>{t("Copiato!", "Copied!")}</span>
                 </>
               ) : (
                 <>
                   <Copy className="w-3.5 h-3.5" />
-                  <span>Copia link</span>
+                  <span>{t("Copia link", "Copy link")}</span>
                 </>
               )}
             </button>
@@ -274,7 +276,7 @@ export const SidebarDrawer: React.FC = () => {
 
           <div className="p-3 bg-white rounded-xl border border-stone-200 text-xs flex items-center justify-between">
             <div>
-              <span className="text-[11px] text-stone-500 block">Conto PayPal Spose:</span>
+              <span className="text-[11px] text-stone-500 block">{t("Conto PayPal Spose:", "Couple’s PayPal account:")}</span>
               <span className="font-semibold text-stone-900 font-mono text-[11px]">
                 {settings.paypalEmail}
               </span>

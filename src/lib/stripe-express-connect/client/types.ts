@@ -13,6 +13,7 @@ export interface CheckoutRequest {
   /** Amount in the major currency unit, for example 50 = EUR 50.00. */
   amount: number;
   currency?: string;
+  locale?: 'it' | 'en';
   title?: string;
   description?: string;
   metadata?: Record<string, string>;

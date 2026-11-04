@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { RegistryProvider, useRegistry } from './context/RegistryContext';
 import { Navbar } from './components/Navbar';
 import { SidebarDrawer } from './components/SidebarDrawer';
@@ -22,6 +23,7 @@ import { Heart, ShieldCheck, Code2 } from 'lucide-react';
 
 const MainContent: React.FC = () => {
   const { activeView, settings, setActiveView } = useRegistry();
+  const { t } = useLanguage();
 
   // If in dedicated embed view (for iframe on external websites)
   if (activeView === 'embed_view') {
@@ -80,7 +82,7 @@ const MainContent: React.FC = () => {
               {settings.coupleNames}
             </span>
             <span aria-hidden="true">·</span>
-            <span>Lista Nozze & Desideri</span>
+            <span>{t('Lista Nozze & Desideri', 'Wedding Registry & Wishes')}</span>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 text-xs">
@@ -88,42 +90,42 @@ const MainContent: React.FC = () => {
               onClick={() => setActiveView('embed_view')}
               className="hover:text-[#636842] transition-colors cursor-pointer font-semibold text-[#636842]"
             >
-              Anteprima Embed (Senza Menù)
+              {t('Anteprima Embed (Senza Menù)', 'Embed Preview (No Menu)')}
             </button>
             <span className="text-stone-300">·</span>
             <button
               onClick={() => setActiveView('organizer_dashboard')}
               className="hover:text-[#636842] transition-colors cursor-pointer"
             >
-              Dashboard Sposi
+              {t('Dashboard Sposi', 'Couple Dashboard')}
             </button>
             <span className="text-stone-300">·</span>
             <button
               onClick={() => setActiveView('organizer_gifts')}
               className="hover:text-[#636842] transition-colors cursor-pointer"
             >
-              Gestisci Lista
+              {t('Gestisci Lista', 'Manage Registry')}
             </button>
             <span className="text-stone-300">·</span>
             <button
               onClick={() => setActiveView('organizer_paypal')}
               className="hover:text-[#636842] transition-colors cursor-pointer"
             >
-              Pagamenti
+              {t('Pagamenti', 'Payments')}
             </button>
             <span className="text-stone-300">·</span>
             <button
               onClick={() => setActiveView('organizer_thanks')}
               className="hover:text-[#636842] transition-colors cursor-pointer"
             >
-              Ringraziamenti
+              {t('Ringraziamenti', 'Thank You Notes')}
             </button>
             <span className="text-stone-300">·</span>
             <button
               onClick={() => setActiveView('organizer_embed')}
               className="hover:text-[#636842] transition-colors cursor-pointer font-semibold text-[#636842]"
             >
-              Codice per il Tuo Sito
+              {t('Codice per il Tuo Sito', 'Code for Your Website')}
             </button>
           </div>
         </div>
@@ -140,8 +142,8 @@ const MainContent: React.FC = () => {
 
 export default function App() {
   return (
-    <RegistryProvider>
+    <LanguageProvider><RegistryProvider>
       <MainContent />
-    </RegistryProvider>
+    </RegistryProvider></LanguageProvider>
   );
 }
