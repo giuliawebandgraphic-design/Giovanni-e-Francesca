@@ -13,7 +13,7 @@ const links = [
   { en: 'The Weekend', it: 'Il weekend', href: `${mainSite}/il-weekend/` },
   { en: 'Where to Stay', it: 'Dove alloggiare', href: `${mainSite}/dove-soggiornare/` },
   { en: 'How to Arrive', it: 'Come arrivare', href: `${mainSite}/come-arrivare/` },
-  { en: 'RSVP', it: 'RSVP', href: 'https://francescaegiovanni-rsvp.vercel.app/rsvp', preserveLanguage: true },
+  { en: 'RSVP', it: 'RSVP', href: 'https://francescaegiovanni-rsvp.vercel.app/rsvp' },
   { en: 'FAQs', it: 'Domande frequenti', href: `${mainSite}/faqs/` },
   { en: 'Registry', it: 'Lista nozze', href: '/registry', current: true },
 ];
@@ -50,7 +50,7 @@ export const PublicRegistryPage: React.FC = () => {
           </button>
           <nav id="wedding-navigation" aria-label={language === 'it' ? 'Menu principale' : 'Main menu'} className={`wedding-registry-page__nav${menuOpen ? ' is-open' : ''}`}>
             {links.map(link => (
-              <a key={link.href} href={link.preserveLanguage ? `${link.href}?lang=${language}` : link.href} aria-current={link.current ? 'page' : undefined}>
+              <a key={link.href} href={`${link.href}?lang=${language}`} aria-current={link.current ? 'page' : undefined}>
                 {link[language]}
               </a>
             ))}

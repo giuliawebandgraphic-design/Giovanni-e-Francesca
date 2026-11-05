@@ -15,8 +15,8 @@ accessibili dagli indirizzi esistenti.
 
 Dopo il deploy, verificare la pagina e aggiornare il collegamento Registry sia
 nel menu WordPress sia nella pagina RSVP su Vercel. Se necessario, configurare un
-reindirizzamento dalla vecchia pagina WordPress. Il selettore linguistico delle
-altre pagine WordPress resta indipendente. Il checkout Stripe mantiene i propri
+reindirizzamento dalla vecchia pagina WordPress. I collegamenti del menu passano
+la lingua selezionata con `?lang=it` o `?lang=en` a Divi Auto Translate. Il checkout Stripe mantiene i propri
 indirizzi di ritorno esistenti, verso la pagina principale dell'applicazione.
 
 ## Configurazione iniziale
