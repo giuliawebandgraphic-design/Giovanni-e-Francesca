@@ -3,6 +3,8 @@ import { Menu, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { GuestEmbedView } from './GuestEmbedView';
 import floral from '../assets/images/wedding-floral.png';
+import flagEn from '../assets/images/flag-en.svg';
+import flagIt from '../assets/images/flag-it.svg';
 import './public-registry.css';
 
 const mainSite = 'https://giovanniefrancesca.com';
@@ -55,10 +57,10 @@ export const PublicRegistryPage: React.FC = () => {
           </nav>
           <div className="wedding-registry-page__languages" role="group" aria-label={language === 'it' ? 'Seleziona lingua' : 'Select language'}>
             <button type="button" aria-label="English" aria-pressed={language === 'en'} onClick={() => selectLanguage('en')}>
-              EN
+              <img src={flagEn} alt="" />
             </button>
             <button type="button" aria-label="Italiano" aria-pressed={language === 'it'} onClick={() => selectLanguage('it')}>
-              IT
+              <img src={flagIt} alt="" />
             </button>
           </div>
         </div>

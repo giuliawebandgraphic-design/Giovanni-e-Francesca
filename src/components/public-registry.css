@@ -16,8 +16,8 @@
 .wedding-registry-page__nav a { color: rgba(0, 0, 0, .6); font-family: 'Cormorant Garamond', Georgia, serif; font-size: 14px; font-weight: 500; letter-spacing: 4px; line-height: 1.3; text-decoration: none; text-transform: uppercase; white-space: nowrap; }
 .wedding-registry-page__nav a:hover, .wedding-registry-page__nav a:focus-visible { color: #5d6d59; }
 .wedding-registry-page__languages { display: flex; justify-content: center; gap: 5px; margin-top: 27px; }
-.wedding-registry-page__languages button { padding: 2px 5px; color: rgba(0, 0, 0, .6); cursor: pointer; font-family: Georgia, serif; font-size: 11px; line-height: 1.2; }
-.wedding-registry-page__languages button[aria-pressed="true"] { color: #5d6d59; font-weight: 700; }
+.wedding-registry-page__languages button { padding: 0; cursor: pointer; line-height: 0; }
+.wedding-registry-page__languages img { width: 25px; height: 19px; object-fit: cover; }
 .wedding-registry-page__languages button:focus-visible, .wedding-registry-page__menu-toggle:focus-visible { outline: 2px solid #5d6d59; outline-offset: 3px; }
 .wedding-registry-page__menu-toggle { display: none; }
 .wedding-registry-page__frame { position: relative; display: flex; align-items: center; justify-content: center; width: 80%; max-width: 1080px; height: 169px; margin: 35px auto 0; border: 6px double #a9b49a; background: #fff; }
