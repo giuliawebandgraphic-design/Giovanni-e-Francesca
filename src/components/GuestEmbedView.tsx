@@ -76,6 +76,8 @@ export const GuestEmbedView: React.FC<{ showLanguageSelector?: boolean }> = ({ s
                 : 0;
 
               const isCompleted = !gift.isInfiniteQuota && gift.raisedAmount >= gift.targetAmount;
+              const subtitle = language === 'en' ? (gift.subtitleEn || gift.subtitle) : gift.subtitle;
+              const description = language === 'en' ? (gift.descriptionEn || gift.description) : gift.description;
 
               return (
                 <div
@@ -110,11 +112,11 @@ export const GuestEmbedView: React.FC<{ showLanguageSelector?: boolean }> = ({ s
                       <h3 className="font-editorial text-[0.80rem] font-semibold text-stone-900 leading-snug line-clamp-1">
                         {language === 'en' ? (gift.titleEn || gift.title) : gift.title}
                       </h3>
-                      {gift.subtitle && (
-                        <p className="text-xs text-stone-500 line-clamp-1">{language === 'en' ? (gift.subtitleEn || gift.subtitle) : gift.subtitle}</p>
+                      {subtitle && (
+                        <p className="text-xs text-stone-500 line-clamp-1">{subtitle}</p>
                       )}
-                      {gift.description && (
-                        <p className="text-xs text-stone-600 line-clamp-2 pt-1">{language === 'en' ? (gift.descriptionEn || gift.description) : gift.description}</p>
+                      {description && (
+                        <p className="text-xs text-stone-600 line-clamp-2 pt-1">{description}</p>
                       )}
                     </div>
 

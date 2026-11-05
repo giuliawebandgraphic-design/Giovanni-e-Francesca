@@ -143,13 +143,6 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
 
         {/* Form Body - Horizontal Two Column Layout */}
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-y-auto">
-          <div className="mx-6 mt-5 p-4 rounded-xl bg-stone-50 border border-stone-200 space-y-3">
-            <p className="text-sm font-bold">🇬🇧 Traduzioni in inglese del regalo</p>
-            <p className="text-xs text-stone-600">Se lasciati vuoti, verranno mostrati i testi italiani.</p>
-            <input aria-label="Titolo in inglese" placeholder="Titolo in inglese" value={titleEn} onChange={e => setTitleEn(e.target.value)} className="w-full rounded-lg border border-stone-300 bg-white p-2 text-sm" />
-            <input aria-label="Sottotitolo in inglese" placeholder="Sottotitolo in inglese" value={subtitleEn} onChange={e => setSubtitleEn(e.target.value)} className="w-full rounded-lg border border-stone-300 bg-white p-2 text-sm" />
-            <textarea aria-label="Descrizione in inglese" placeholder="Descrizione in inglese" value={descriptionEn} onChange={e => setDescriptionEn(e.target.value)} className="w-full rounded-lg border border-stone-300 bg-white p-2 text-sm" />
-          </div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 items-start">
             
             {/* LEFT COLUMN: Image & Visual Card Preview (5 cols) */}
@@ -330,7 +323,7 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
               {/* Titolo */}
               <div>
                 <label className="block text-xs font-bold text-stone-900 mb-1">
-                  Titolo del Regalo o Esperienza *
+                  Titolo del Regalo o Esperienza in italiano *
                 </label>
                 <input
                   type="text"
@@ -342,10 +335,18 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
                 />
               </div>
 
+              <div>
+                <label htmlFor="gift-title-en" className="block text-xs font-bold text-stone-900 mb-1">
+                  Titolo in inglese (facoltativo)
+                </label>
+                <input id="gift-title-en" type="text" value={titleEn} onChange={e => setTitleEn(e.target.value)} className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#BCBF97] focus:bg-white" />
+                <p className="mt-1 text-xs text-stone-500">Se lasciato vuoto, verrà mostrato il titolo italiano.</p>
+              </div>
+
               {/* Sottotitolo */}
               <div>
                 <label className="block text-xs font-bold text-stone-900 mb-1">
-                  Sottotitolo Breve
+                  Sottotitolo breve in italiano
                 </label>
                 <input
                   type="text"
@@ -354,6 +355,11 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
                   onChange={(e) => setSubtitle(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-stone-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#BCBF97] focus:bg-white"
                 />
+              </div>
+
+              <div>
+                <label htmlFor="gift-subtitle-en" className="block text-xs font-bold text-stone-900 mb-1">Sottotitolo in inglese (facoltativo)</label>
+                <input id="gift-subtitle-en" type="text" value={subtitleEn} onChange={e => setSubtitleEn(e.target.value)} className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-stone-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#BCBF97] focus:bg-white" />
               </div>
 
               {/* Obiettivo del Desiderio: Scelta tra Traguardo con Obiettivo o Salvadanaio Libero */}
@@ -457,7 +463,7 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
               {/* Descrizione o storia */}
               <div>
                 <label className="block text-xs font-bold text-stone-900 mb-1">
-                  Descrizione o Storia del Regalo
+                  Descrizione o storia del regalo in italiano
                 </label>
                 <textarea
                   rows={4}
@@ -466,6 +472,12 @@ export const AddEditGiftModal: React.FC<AddEditGiftModalProps> = ({
                   placeholder="Racconta ai vostri invitati perché questo desiderio è così importante per voi..."
                   className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-stone-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#BCBF97] focus:bg-white leading-relaxed resize-none"
                 />
+              </div>
+
+              <div>
+                <label htmlFor="gift-description-en" className="block text-xs font-bold text-stone-900 mb-1">Descrizione in inglese (facoltativa)</label>
+                <textarea id="gift-description-en" rows={4} value={descriptionEn} onChange={e => setDescriptionEn(e.target.value)} className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-stone-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#BCBF97] focus:bg-white leading-relaxed resize-none" />
+                <p className="mt-1 text-xs text-stone-500">Se il sottotitolo o la descrizione in inglese sono vuoti, verranno mostrati quelli italiani.</p>
               </div>
 
               {/* Trust pill */}

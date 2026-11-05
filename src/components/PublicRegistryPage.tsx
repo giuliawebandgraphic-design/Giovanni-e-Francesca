@@ -3,8 +3,6 @@ import { Menu, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { GuestEmbedView } from './GuestEmbedView';
 import floral from '../assets/images/wedding-floral.png';
-import flagEn from '../assets/images/flag-en.svg';
-import flagIt from '../assets/images/flag-it.svg';
 import './public-registry.css';
 
 const mainSite = 'https://giovanniefrancesca.com';
@@ -21,10 +19,11 @@ const links = [
 export const PublicRegistryPage: React.FC = () => {
   const { language, setLanguage } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
+  const pageTitle = language === 'it' ? 'Lista nozze' : 'Registry';
 
   useEffect(() => {
-    document.title = 'Registry | Giovanni & Francesca';
-  }, []);
+    document.title = `${pageTitle} | Giovanni & Francesca`;
+  }, [pageTitle]);
 
   const selectLanguage = (next: 'it' | 'en') => {
     setLanguage(next);
@@ -50,22 +49,22 @@ export const PublicRegistryPage: React.FC = () => {
           <nav id="wedding-navigation" aria-label={language === 'it' ? 'Menu principale' : 'Main menu'} className={`wedding-registry-page__nav${menuOpen ? ' is-open' : ''}`}>
             {links.map(link => (
               <a key={link.label} href={link.href} aria-current={link.current ? 'page' : undefined}>
-                {link.label}
+                {link.current ? pageTitle : link.label}
               </a>
             ))}
           </nav>
           <div className="wedding-registry-page__languages" role="group" aria-label={language === 'it' ? 'Seleziona lingua' : 'Select language'}>
             <button type="button" aria-label="English" aria-pressed={language === 'en'} onClick={() => selectLanguage('en')}>
-              <img src={flagEn} alt="" />
+              EN
             </button>
             <button type="button" aria-label="Italiano" aria-pressed={language === 'it'} onClick={() => selectLanguage('it')}>
-              <img src={flagIt} alt="" />
+              IT
             </button>
           </div>
         </div>
         <div className="wedding-registry-page__frame">
           <img className="wedding-registry-page__floral" src={floral} alt="" />
-          <h1>Registry</h1>
+          <h1>{pageTitle}</h1>
         </div>
       </header>
 
