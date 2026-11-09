@@ -15,10 +15,15 @@
 .wedding-registry-page__nav { display: flex; align-items: center; justify-content: center; gap: 20px; min-height: 29px; }
 .wedding-registry-page__nav a { color: rgba(0, 0, 0, .6); font-family: 'Cormorant Garamond', Georgia, serif; font-size: 14px; font-weight: 500; letter-spacing: 4px; line-height: 1.3; text-decoration: none; text-transform: uppercase; white-space: nowrap; }
 .wedding-registry-page__nav a:hover, .wedding-registry-page__nav a:focus-visible { color: #5d6d59; }
-.wedding-registry-page__languages { display: flex; justify-content: center; gap: 5px; margin-top: 27px; }
-.wedding-registry-page__languages button { padding: 0; cursor: pointer; line-height: 0; }
-.wedding-registry-page__languages img { width: 25px; height: 19px; object-fit: cover; }
-.wedding-registry-page__languages button:focus-visible, .wedding-registry-page__menu-toggle:focus-visible { outline: 2px solid #5d6d59; outline-offset: 3px; }
+.wedding-registry-page__languages { display: flex; justify-content: center; margin-top: 27px; }
+.wedding-registry-page__language-switcher { position: relative; z-index: 4; border-radius: 5px; }
+.wedding-registry-page__language-switcher[open] { background: #fff; }
+.wedding-registry-page__language-switcher summary, .wedding-registry-page__language-switcher button { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 15px; border: 0; color: #000; background: transparent; font: 700 14px/1.7 system-ui, sans-serif; cursor: pointer; }
+.wedding-registry-page__language-switcher summary { list-style: none; }
+.wedding-registry-page__language-switcher summary::-webkit-details-marker { display: none; }
+.wedding-registry-page__language-switcher button { position: absolute; top: 100%; left: 0; min-width: 100%; border-radius: 0 0 5px 5px; background: #fff; }
+.wedding-registry-page__language-switcher img { display: block; width: 20px; height: 16px; object-fit: cover; }
+.wedding-registry-page__language-switcher summary:focus-visible, .wedding-registry-page__language-switcher button:focus-visible, .wedding-registry-page__menu-toggle:focus-visible { outline: 2px solid #5d6d59; outline-offset: 3px; }
 .wedding-registry-page__menu-toggle { display: none; }
 .wedding-registry-page__frame { position: relative; display: flex; align-items: center; justify-content: center; width: 80%; max-width: 1080px; height: 169px; margin: 35px auto 0; border: 6px double #a9b49a; background: #fff; }
 .wedding-registry-page__frame h1 { margin: 0; padding-left: 12px; color: #5d6d59; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 28px; font-weight: 400; letter-spacing: 12px; line-height: 1; text-align: center; text-transform: uppercase; }

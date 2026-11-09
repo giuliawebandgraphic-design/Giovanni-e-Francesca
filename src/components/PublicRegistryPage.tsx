@@ -55,13 +55,20 @@ export const PublicRegistryPage: React.FC = () => {
               </a>
             ))}
           </nav>
-          <div className="wedding-registry-page__languages" role="group" aria-label={language === 'it' ? 'Seleziona lingua' : 'Select language'}>
-            <button type="button" aria-label="English" aria-pressed={language === 'en'} onClick={() => selectLanguage('en')}>
-              <img src={flagEn} alt="" />
-            </button>
-            <button type="button" aria-label="Italiano" aria-pressed={language === 'it'} onClick={() => selectLanguage('it')}>
-              <img src={flagIt} alt="" />
-            </button>
+          <div className="wedding-registry-page__languages">
+            <details className="wedding-registry-page__language-switcher">
+              <summary aria-label={language === 'it' ? 'Lingua: Italiano' : 'Language: English'}>
+                <img src={language === 'it' ? flagIt : flagEn} alt="" />
+                {language.toUpperCase()}
+              </summary>
+              <button type="button" aria-label={language === 'it' ? 'English' : 'Italiano'} onClick={(event) => {
+                selectLanguage(language === 'it' ? 'en' : 'it');
+                event.currentTarget.closest('details')?.removeAttribute('open');
+              }}>
+                <img src={language === 'it' ? flagEn : flagIt} alt="" />
+                {language === 'it' ? 'EN' : 'IT'}
+              </button>
+            </details>
           </div>
         </div>
         <div className="wedding-registry-page__frame">
