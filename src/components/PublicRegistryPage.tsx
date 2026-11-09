@@ -18,6 +18,13 @@ const links = [
   { en: 'Registry', it: 'Lista nozze', href: '/registry', current: true },
 ];
 
+function languageLink(href: string, language: 'it' | 'en') {
+  if (href.startsWith(`${mainSite}/`)) {
+    return language === 'en' ? href.replace(`${mainSite}/`, `${mainSite}/en/`) : href;
+  }
+  return `${href}?lang=${language}`;
+}
+
 export const PublicRegistryPage: React.FC = () => {
   const { language, setLanguage } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -50,7 +57,7 @@ export const PublicRegistryPage: React.FC = () => {
           </button>
           <nav id="wedding-navigation" aria-label={language === 'it' ? 'Menu principale' : 'Main menu'} className={`wedding-registry-page__nav${menuOpen ? ' is-open' : ''}`}>
             {links.map(link => (
-              <a key={link.href} href={`${link.href}?lang=${language}`} aria-current={link.current ? 'page' : undefined}>
+              <a key={link.href} href={languageLink(link.href, language)} aria-current={link.current ? 'page' : undefined}>
                 {link[language]}
               </a>
             ))}
