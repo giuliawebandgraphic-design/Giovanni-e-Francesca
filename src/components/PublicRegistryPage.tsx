@@ -88,14 +88,14 @@ export const PublicRegistryPage: React.FC = () => {
         <section className="wedding-registry-page__intro" aria-label={language === 'it' ? 'Un pensiero per gli sposi' : 'A gift for the couple'}>
           {language === 'it' ? (
             <p>
-              La vostra presenza nel nostro giorno speciale è il regalo più bello che potremmo desiderare.<br />
+              La vostra presenza nel nostro giorno speciale è il regalo più bello che potremmo desiderare.{' '}
               Non è necessario alcun dono, ma per chi avesse piacere di farci un pensiero, abbiamo raccolto qui sotto alcuni spunti e idee.<br />
               <strong>Inoltre durante i preparativi del nostro matrimonio, abbiamo scelto di realizzare le bomboniere solidali con VIDAS, una realtà che ci sta particolarmente a cuore.<br />
               Ci farebbe davvero felici se voleste unirvi a noi nel sostenere questa importante causa. Naturalmente, il contributo è del tutto facoltativo: grazie di cuore!</strong>
             </p>
           ) : (
             <p>
-              Your presence on our special day is the most beautiful gift we could ask for.<br />
+              Your presence on our special day is the most beautiful gift we could ask for.{' '}
               No gift is necessary, but for those who would like to give us a gift, we have gathered some ideas below.<br />
               <strong>During our wedding preparations, we also chose to support VIDAS, an organisation that is particularly close to our hearts, with our wedding favours.<br />
               We would be delighted if you joined us in supporting this important cause. Your contribution is entirely optional: thank you so much!</strong>
