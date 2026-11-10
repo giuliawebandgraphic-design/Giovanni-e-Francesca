@@ -281,6 +281,14 @@ app.post('/api/dashboard/logout', (_req: Request, res: Response) => {
   res.status(204).end();
 });
 
+app.use(['/api/stripe-connect/dashboard', '/api/stripe-connect/onboard', '/api/stripe/disconnect'], (req, res, next) => {
+  if (!hasDashboardSession(req.headers.cookie)) {
+    res.status(401).json({ error: 'Accesso alla dashboard richiesto.' });
+    return;
+  }
+  next();
+});
+
 // 1. API: Get entire registry
 app.get('/api/registry', (req: Request, res: Response) => {
   const data = loadRegistry();
@@ -425,8 +433,8 @@ if (STRIPE_SECRET_KEY) {
       returnUrl: `${APP_URL}/api/stripe-connect/return`,
     },
     checkout: {
-      successUrl: `${APP_URL}/?stripe_checkout=success`,
-      cancelUrl: `${APP_URL}/?stripe_checkout=cancelled`,
+      successUrl: `${APP_URL}/registry?stripe_checkout=success`,
+      cancelUrl: `${APP_URL}/registry?stripe_checkout=cancelled`,
     },
     onAccountCreated: async (account, request) => {
       const current = loadRegistry();

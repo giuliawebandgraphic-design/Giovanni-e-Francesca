@@ -8,7 +8,6 @@ import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { RegistryProvider, useRegistry } from './context/RegistryContext';
 import { Navbar } from './components/Navbar';
 import { SidebarDrawer } from './components/SidebarDrawer';
-import { GuestRegistryView } from './components/GuestRegistryView';
 import { GuestEmbedView } from './components/GuestEmbedView';
 import { OrganizerDashboard } from './components/OrganizerDashboard';
 import { DashboardPasswordGate } from './components/DashboardPasswordGate';
@@ -27,7 +26,7 @@ const MainContent: React.FC = () => {
   const { t } = useLanguage();
 
   // The dedicated wedding page is independent of the saved dashboard view.
-  if (window.location.pathname.replace(/\/+$/, '') === '/registry') {
+  if (window.location.pathname.replace(/\/+$/, '') === '/registry' || activeView === 'guest_registry') {
     return <PublicRegistryPage />;
   }
 
@@ -69,7 +68,6 @@ const MainContent: React.FC = () => {
       <Navbar />
 
       <main className="flex-1">
-        {activeView === 'guest_registry' && <GuestRegistryView />}
         {activeView === 'organizer_dashboard' && <OrganizerDashboard />}
         {activeView === 'organizer_guests' && <GuestDonationsManager />}
         {activeView === 'organizer_gifts' && <WishlistManager />}
@@ -141,9 +139,7 @@ const MainContent: React.FC = () => {
 
   // The registry stays publicly accessible to invited guests; every management
   // view is rendered only after the password check succeeds.
-  return activeView === 'guest_registry'
-    ? dashboardContent
-    : <DashboardPasswordGate>{dashboardContent}</DashboardPasswordGate>;
+  return <DashboardPasswordGate>{dashboardContent}</DashboardPasswordGate>;
 };
 
 export default function App() {

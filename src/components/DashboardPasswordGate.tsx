@@ -16,8 +16,12 @@ export const DashboardPasswordGate: React.FC<{ children: React.ReactNode }> = ({
     void (async () => {
       try {
         const response = await fetch('/api/dashboard/session', { cache: 'no-store', credentials: 'same-origin' });
+        if (!response.ok) throw new Error('Session check failed');
         const session = await response.json() as SessionResponse;
-        if (active) setLocked(Boolean(session.configured) && !session.authenticated);
+        if (active) {
+          setLocked(session.configured !== true || session.authenticated !== true);
+          if (session.configured === false) setError('La password non è configurata sul server.');
+        }
       } catch {
         if (active) setError('Impossibile verificare l’accesso protetto. Riprova.');
       } finally {

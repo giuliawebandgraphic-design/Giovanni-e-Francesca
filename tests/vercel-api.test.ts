@@ -8,6 +8,7 @@ type ApiHandler = (request: Request) => Promise<Response>;
 
 let testDirectory = '';
 let handleVercelApi: ApiHandler;
+let dashboardCookie = '';
 
 function request(pathname: string, init?: RequestInit): Request {
   return new Request(`https://registry.example${pathname}`, init);
@@ -60,6 +61,7 @@ test('la dashboard richiede una password verificata dal server', async () => {
   const cookie = accepted.headers.get('set-cookie');
   assert.ok(cookie);
   assert.match(cookie, /HttpOnly/);
+  dashboardCookie = cookie.split(';')[0];
 
   const authenticatedSession = await handleVercelApi(request('/api/dashboard/session', {
     headers: { cookie: cookie.split(';')[0] },
@@ -104,10 +106,31 @@ test('il salvataggio POST persiste e restituisce JSON', async () => {
   assert.equal((data.settings as Record<string, unknown>).coupleNames, 'Test Vercel');
 });
 
+test('gli accessi amministrativi Stripe richiedono la sessione anche senza password configurata', async () => {
+  for (const [pathname, method] of [
+    ['/api/stripe-connect/dashboard', 'GET'],
+    ['/api/stripe-connect/onboard', 'POST'],
+    ['/api/stripe/disconnect', 'POST'],
+  ]) {
+    assert.equal((await handleVercelApi(request(pathname, { method }))).status, 401);
+  }
+  delete process.env.DASHBOARD_PASSWORD;
+  try {
+    assert.deepEqual(await json(await handleVercelApi(request('/api/dashboard/session', {
+      headers: { cookie: dashboardCookie },
+    }))), { configured: false, authenticated: false });
+    assert.equal((await handleVercelApi(request('/api/stripe-connect/dashboard', {
+      headers: { cookie: dashboardCookie },
+    }))).status, 401);
+  } finally {
+    process.env.DASHBOARD_PASSWORD = 'password-di-test';
+  }
+});
+
 test('onboarding Stripe senza chiave risponde in JSON e non con una pagina 404', async () => {
   const response = await handleVercelApi(request('/api/stripe-connect/onboard', {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', cookie: dashboardCookie },
     body: JSON.stringify({ email: 'test@example.com' }),
   }));
   assert.equal(response.status, 400);

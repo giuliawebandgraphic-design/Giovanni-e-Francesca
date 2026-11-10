@@ -294,8 +294,8 @@ async function createCheckout(request: Request): Promise<Response> {
   const session = await stripeClient().checkout.sessions.create({
     mode: 'payment',
     locale: payload.locale === 'en' ? 'en' : 'it',
-    success_url: `${appUrl}/?stripe_checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${appUrl}/?stripe_checkout=cancelled`,
+    success_url: `${appUrl}/registry?lang=${payload.locale}&stripe_checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${appUrl}/registry?lang=${payload.locale}&stripe_checkout=cancelled`,
     line_items: [{
       price_data: {
         currency: payload.currency || 'eur',
@@ -423,6 +423,11 @@ export async function handleVercelApi(request: Request): Promise<Response> {
       // Function has returned its response.
       await notifyNewDonations(current, body.donations, configuredAppUrl(request));
       return json({ success: true, version: saved.version, lastModified: saved.lastModified });
+    }
+
+    if (['/api/stripe-connect/dashboard', '/api/stripe-connect/onboard', '/api/stripe/disconnect'].includes(pathname)
+      && !hasDashboardSession(request.headers.get('cookie') || undefined)) {
+      return json({ error: 'Accesso alla dashboard richiesto.' }, 401);
     }
 
     if (request.method === 'GET' && pathname === '/api/stripe-connect/registry-status') {

@@ -44,7 +44,7 @@ export function expiredDashboardSessionCookie(): string {
 }
 
 export function hasDashboardSession(cookieHeader: string | undefined): boolean {
-  if (!isDashboardProtectionConfigured()) return true;
+  if (!isDashboardProtectionConfigured()) return false;
   const token = readCookie(cookieHeader);
   if (!token) return false;
   const [value, providedSignature] = token.split('.');
