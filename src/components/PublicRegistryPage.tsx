@@ -103,7 +103,7 @@ export const PublicRegistryPage: React.FC = () => {
           )}
           <p className="wedding-registry-page__bank">
             <strong>{language === 'it' ? 'BANCA E INTESTATARIO' : 'BANK AND ACCOUNT HOLDER'}</strong> : INTESA SAN PAOLO - VIDAS ODV<br />
-            <strong>IBAN</strong> : IT24A03069 09606100000061310{' '}
+            <strong>IBAN</strong> : IT24A03069 09606100000061310{' '} </br>
             <strong>{language === 'it' ? 'CAUSALE' : 'PAYMENT REFERENCE'}</strong> : VD23820 - Gio&amp;Fra
           </p>
         </section>
